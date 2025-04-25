@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useEffect, useState, useRef } from "react"
-import { useDarkMode } from "@/components/providers/DarkModeProvider"
+
 // import UserProfileSidebar from "../users/UserInfoSidebar"
 import Image from "next/image"
+import ColourfulBlock from "../ui/ColourfulBlock"
 
 interface User {
   ticketId: string
@@ -25,19 +26,14 @@ interface Props {
 }
 
 const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
-  const { darkMode } = useDarkMode() // Get dark mode state
-  const [showDark, setShowDark] = useState(darkMode)
+   
+  
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
-  const [showUserSidebar, setShowUserSidebar] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  
   const tableRef = useRef<HTMLDivElement>(null)
   const dropdownRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  useEffect(() => {
-    // Delay state update slightly to enable smooth transition
-    const timeout = setTimeout(() => setShowDark(darkMode), 100)
-    return () => clearTimeout(timeout)
-  }, [darkMode])
+
 
   useEffect(() => {
     // Close dropdown when clicking outside
@@ -134,14 +130,12 @@ const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
                   </td>
                   <td className="p-2 sm:p-4  min-w-[150px] break-words font-[400] text-[#333333]">{supportRequest.issueType}</td>
                   <td className={` min-w-[100px] text-[#333333] p-7 relative left-[-15px]`}>
-                    <span className={`${getPriorityColors(supportRequest.priority)} font-[700] rounded-[12px] px-[24px] py-[12px] w-[100px] h-[38px]`}>
-                    {supportRequest.priority}
-                    </span>
+                    <ColourfulBlock className={`${getPriorityColors(supportRequest.priority)} font-[600] rounded-[12px] px-[24px] py-[12px] w-[100px] h-[38px]`} text={supportRequest.priority} />
+                    
                     </td>
                   <td className={` min-w-[100px] text-[#333333] p-7 relative left-[-15px]`}>
-                    <span className={`${getStatusColors(supportRequest.status)} font-[600] rounded-[12px] px-[24px] py-[12px] w-[100px] h-[38px]`}>
-                    {supportRequest.status}
-                    </span>
+                    <ColourfulBlock className={`${getPriorityColors(supportRequest.priority)} font-[600] rounded-[12px] px-[24px] py-[12px] w-[100px] h-[38px]`} text={supportRequest.priority} />
+                    
                     </td>
                   {/* Add dateCreated column */}
                   <td className="p-2 sm:p-4  min-w-[120px] break-words font-[400] text-[#333333]">{supportRequest.dateCreated}</td>
@@ -186,42 +180,7 @@ const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
   export default UserTable
 
 
-         {/* User Profile Sidebar */}
-      {/* {selectedUser && selectedsupportRequest.status === "Verified" && (
-        <UserProfileSidebar
-          showSidebar={showUserSidebar}
-          onClose={() => setShowUserSidebar(false)}
-          user={{
-            id: selectedsupportRequest.id,
-            profileImage: selectedsupportRequest.profile || "/images/user-avatar.png",
-            name: selectedsupportRequest.name,
-            issueType: selectedsupportRequest.issueType,
-            joiningDate: selectedsupportRequest.priority,
-            status: selectedsupportRequest.status,
-          }}
-        />
-      )}
-
-      {selectedUser && selectedsupportRequest.status === "Pending" && (
-        <UserProfileSidebar
-          showSidebar={showUserSidebar}
-          onClose={() => setShowUserSidebar(false)}
-          user={{
-            id: selectedsupportRequest.id,
-            profileImage: selectedsupportRequest.profile || "/images/user-avatar.png",
-            name: selectedsupportRequest.name,
-            issueType: selectedsupportRequest.issueType,
-            joiningDate: selectedsupportRequest.priority,
-            status: selectedsupportRequest.status,
-          }}
-        />
-      )}
-    </div>
-  )
-}  
-
-
-*/}
+      
 
 
 

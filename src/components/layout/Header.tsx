@@ -14,11 +14,11 @@ export default function Navbar() {
     <nav className="w-full bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
       {/* Logo */}
       <Link href="/" className="flex items-center">
-        <Image
+        <img
           src={darkMode ? "/images/darkModeLogo.svg" : "/images/logo.svg"}
           alt="logo"
-          height={34}
-          width={152}
+          
+          className="min-[400px]:h-[34px] min-[400px]:w-[152px] h-[28px] w-[110px]"
         />
       </Link>
 
@@ -94,10 +94,10 @@ export default function Navbar() {
             {isMenuOpen && (
               <div className="absolute top-10 right-0 w-44 bg-white rounded-md shadow-lg py-3 px-4 z-10 border border-gray-100 ">
                 <div className="space-y-3">
-                  <Link href="/settings" className="block text-sm text-secondary font-bold curpsor-pointer">
+                  <Link href="/settings" className="block text-sm text-secondary font-semibold cursor-pointer">
                     Forgot Password
                   </Link>
-                  <Link href="/logout" className="block text-sm text-[#DF1D1D] font-bold curpsor-pointer">
+                  <Link href="/logout" className="block text-sm text-[#DF1D1D] font-semibold cursor-pointer">
                     Logout
                   </Link>
                 </div>

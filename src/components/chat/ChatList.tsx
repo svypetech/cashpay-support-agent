@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ChatUser } from "@/lib/types/chat";
-import Search from "../support-requests/Search";
+import Search from "../ui/Search";
 
 interface ChatListProps {
   onChatSelect: (user: ChatUser, chatId: string) => void;

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Tabs from "@/components/support-requests/Tabs";
+import Tabs from "@/components/ui/Tabs";
 import MainSection from "@/components/support-requests/MainSection";
 import ChatsPage from "@/components/chat/ChatsPage";
 

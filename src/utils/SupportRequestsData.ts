@@ -74,15 +74,3 @@ export const supportRequestsData =
         }
       ]
          
-export const supportRequestHeadings = [
-    
-        "Ticket ID",
-        "User ID",
-        "Issue Type",
-        "Priority",
-        "Status",
-        "Date Created",
-        "Chat",
-        "Actions"
-      ]
-      

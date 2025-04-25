@@ -1,9 +1,9 @@
 import { useState } from "react";
-import Tabs from "@/components/support-requests/Tabs";
-import Search from "./Search";
-import Sort from "./Sort";
+import Tabs from "@/components/ui/Tabs";
+import Search from "../ui/Search";
+import Sort from "../ui/Sort";
 import { supportRequestsData as Data } from "@/utils/SupportRequestsData";
-import { supportRequestHeadings as headings } from "@/utils/SupportRequestsData";
+
 import UserTable from "@/components/tables/UserTable";
 import Pagination from "@/components/tables/pagination/pagination";
 import ChatSidebar from "@/components/chat/ChatSidebar";
@@ -11,6 +11,18 @@ import { ChatUser } from "@/lib/types/chat";
 import { sampleMessages } from "@/utils/chat/utils";
 
 
+
+const headings = [  
+    "Ticket ID",
+    "User ID",
+    "Issue Type",
+    "Priority",
+    "Status",
+    "Date Created",
+    "Chat",
+    "Actions"
+  ]
+  
 export default function MainSection() {
   const [data, setData] = useState(Data);
   const [filteredData, setFilteredData] = useState(Data);
@@ -23,6 +35,8 @@ export default function MainSection() {
   const [currentChatUser, setCurrentChatUser] = useState<ChatUser | null>(null);
   const [currentChatId, setCurrentChatId] = useState<string>("");
 
+
+  
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -60,7 +74,8 @@ export default function MainSection() {
       </div>
       <div className="flex flex-col gap-4 sm:flex-row sm:gap-10">
         <Search className="sm:w-[80%] w-full" onSearch={handleSearch} />
-        <Sort className="sm:w-[20%] w-full" />
+        <Sort className="sm:w-[20%] w-full" title="Sort"/>
+        
       </div>
       
       <UserTable 

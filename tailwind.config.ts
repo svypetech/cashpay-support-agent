@@ -16,6 +16,7 @@ const config: Config = {
         success: 'var(--color-success)',
         darkBg: 'var(--color-darkBg)',
         textLight: 'var(--color-textLight)',
+        secondaryText: 'var(--color-secondaryText)',
         gray: {
           DEFAULT: 'var(--color-gray)',
           2: 'var(--color-gray2)',
@@ -32,6 +33,7 @@ const config: Config = {
         poppins: ["var(--font-poppins)"],
         satoshi: ["var(--font-satoshi)"],
         montserrat: ["Montserrat", "sans-serif"],
+        'lucida': ['"Lucida Console"', 'Monaco', 'monospace'],
       },
     },
   },

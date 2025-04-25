@@ -9,17 +9,17 @@ export default function Tabs({ tabs,activeTab, setActiveTab,size }: TabsProps) {
     const getSize = () =>{
         switch (size) {
             case "normal":
-                return "text-md"
+                return "min-[380px]:text-md text-sm"
             case "small":
-                return "text-sm"
+                return "min-[380px]:text-sm text-xs"
             default:
-                return "text-lg"
+                return "min-[380px]:text-lg text-md"
         }
     }
     return (
         
         <div className="flex items-center justify-between">
-            <div className={`flex gap-2 ${getSize()}`}>
+            <div className={`flex gap-7 ${getSize()}`}>
             {tabs.map((tab:string) => (
                 <button
                 key={tab}
