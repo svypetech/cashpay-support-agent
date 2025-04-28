@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
 import Tabs from "@/components/ui/Tabs";
-import MainSection from "@/components/monitoring/MainSection";
-import SystemHealthSection from "@/components/monitoring/SystemHealthSection";
-import AlertsSection from "@/components/monitoring/AlertsSection";
+import MainSection from "@/components/monitoring/apilogs/APILogsSection";
+import SystemHealthSection from "@/components/monitoring/systemHealth/SystemHealthSection";
+import AlertsSection from "@/components/monitoring/alerts/AlertsSection";
 
 export default function Monitoring() {
   const [activeTab, setActiveTab] = useState("API Logs");

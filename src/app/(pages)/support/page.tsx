@@ -1,18 +1,27 @@
 "use client";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
+
+// dynamic import for both components
 import Tabs from "@/components/ui/Tabs";
-import MainSection from "@/components/support-requests/MainSection";
-import ChatsPage from "@/components/chat/ChatsPage";
+const ChatsPage = lazy(() => import("@/components/support/chat/ChatsPage"));
+import MainSection from "@/components/support/support-requests/SupportRequest";
+
 
 export default function Support() {
   const [activeTab, setActiveTab] = useState("Support Requests");
-  const tabs = ["Support Requests", "Chats", "Users"];
+  const tabs = ["Support Requests", "Chats"];
   
   // Render the appropriate component based on the active tab
   const renderContent = () => {
     switch (activeTab) {
       case "Chats":
-        return <ChatsPage />;
+        return (
+          <Suspense fallback={<div>Loading...</div>}>
+            <ChatsPage />
+          </Suspense>
+        )
+        
+        
       case "Users":
         return <div>Users Page Content</div>; // Placeholder for Users tab
       case "Support Requests":

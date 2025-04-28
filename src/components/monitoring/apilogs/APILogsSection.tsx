@@ -3,9 +3,9 @@ import { useState } from "react";
 import Search from "@/components/ui/Search";
 import Sort from "@/components/ui/Sort";
 import { APILogsData as Data } from "@/utils/APILogsData";
-import UserTable from "@/components/tables/UserTable";
+import UserTable from "@/components/tables/SupportRequestTable";
 import Pagination from "@/components/tables/pagination/pagination";
-import APILogsTable from "../tables/APILogsTable";
+import APILogsTable from "../../tables/APILogsTable";
 
 
 const headings = [
@@ -45,7 +45,7 @@ export default function MainSection() {
   return (
     <div className="flex flex-col gap-4 relative">
       
-      <div className="flex flex-col gap-3 sm:flex-row sm:gap-10">
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-10 mt-[20px]">
         <Search className="sm:w-[50%] w-full" onSearch={handleSearch} />
         <Sort className="sm:w-[25%] w-full" title="Filter" />
         <Sort className="sm:w-[25%] w-full" title="Filter" />

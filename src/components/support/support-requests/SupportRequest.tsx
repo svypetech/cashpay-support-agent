@@ -1,12 +1,12 @@
 import { useState } from "react";
 import Tabs from "@/components/ui/Tabs";
-import Search from "../ui/Search";
-import Sort from "../ui/Sort";
+import Search from "../../ui/Search";
+import Sort from "../../ui/Sort";
 import { supportRequestsData as Data } from "@/utils/SupportRequestsData";
 
-import UserTable from "@/components/tables/UserTable";
+import UserTable from "@/components/tables/SupportRequestTable";
 import Pagination from "@/components/tables/pagination/pagination";
-import ChatSidebar from "@/components/chat/ChatSidebar";
+import ChatSidebar from "@/components/support/chat/ChatSidebar";
 import { ChatUser } from "@/lib/types/chat";
 import { sampleMessages } from "@/utils/chat/utils";
 

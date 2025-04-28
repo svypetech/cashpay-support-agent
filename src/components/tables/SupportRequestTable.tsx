@@ -2,10 +2,9 @@
 
 import type React from "react"
 import { useEffect, useState, useRef } from "react"
-
-// import UserProfileSidebar from "../users/UserInfoSidebar"
 import Image from "next/image"
 import ColourfulBlock from "../ui/ColourfulBlock"
+import { getStatusColors } from "@/utils/GetBlockColor"
 
 interface User {
   ticketId: string
@@ -32,9 +31,7 @@ const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
   
   const tableRef = useRef<HTMLDivElement>(null)
   const dropdownRefs = useRef<(HTMLDivElement | null)[]>([])
-
-
-
+  
   useEffect(() => {
     // Close dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
@@ -97,50 +94,60 @@ const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
         return ""
     }
   }
-  const getStatusColors = (status: string) => {
-    switch(status){
-      case "Resolved":
-        return "bg-[#71FB5533] text-[#20C000]"
-      
-      
-    }
-  }
+ 
 
   return (
     <div className="flex-1 rounded-lg w-full py-5">
       {/* Table */}
       <div className="rounded-lg overflow-x-auto w-full" ref={tableRef}>
-        <table className="w-full text-left table-auto min-w-[600px]">
+        <table className="w-full text-left table-auto min-w-[800px]">
           <thead className="bg-[#27AAE11A]">
-            <tr className=" text-[12px] sm:text-[16px] p-2 sm:p-4">
-              {headings.map((heading, index) => (
-                <th key={index} className="p-2 sm:p-4 text-left">
-                  {heading}
-                </th>
-              ))}
-            </tr>
+            
+          <tr className="bg-secondary/10 text-[12px] sm:text-[16px]">
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[12%] whitespace-nowrap">
+    {headings[0]}
+  </th>
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[10%]">
+    {headings[1]}
+  </th>
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[17%]">
+    {headings[2]}
+  </th>
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[15%]">
+    {headings[3]}
+  </th>
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[15%]">
+    {headings[4]}
+  </th>
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[18%] whitespace-nowrap">
+    {headings[5]}
+  </th>
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[12%]">
+    {headings[6]}
+  </th>
+  <th className="py-4 px-6 text-left font-[700] text-[16px] w-[9%]">
+    {headings[7]}
+  </th>
+</tr>
+            
           </thead>
           <tbody>
             {Array.isArray(data) &&
               data.map((supportRequest, index) => (
                 <tr key={index} className="border-b-[0.5px] border-black/10 text-[12px] sm:text-[16px]">
-                  <td className="p-2 sm:p-4  min-w-[100px] break-words font-[400] text-[#333333]">{supportRequest.ticketId}</td>
-                  <td className="p-2 sm:p-4  font-bold  min-w-[120px] break-words font-[400]">
+                  <td className="py-6 px-6 min-w-[100px] break-words font-[400] text-[#333333]">{supportRequest.ticketId}</td>
+                  <td className="py-6 px-6 font-bold min-w-[120px] break-words font-[400]">
                     {supportRequest.userId}
                   </td>
-                  <td className="p-2 sm:p-4  min-w-[150px] break-words font-[400] text-[#333333]">{supportRequest.issueType}</td>
-                  <td className={` min-w-[100px] text-[#333333] p-7 relative left-[-15px]`}>
-                    <ColourfulBlock className={`${getPriorityColors(supportRequest.priority)} font-[600] rounded-[12px] px-[24px] py-[12px] w-[100px] h-[38px]`} text={supportRequest.priority} />
-                    
-                    </td>
-                  <td className={` min-w-[100px] text-[#333333] p-7 relative left-[-15px]`}>
-                    <ColourfulBlock className={`${getPriorityColors(supportRequest.priority)} font-[600] rounded-[12px] px-[24px] py-[12px] w-[100px] h-[38px]`} text={supportRequest.priority} />
-                    
-                    </td>
-                  {/* Add dateCreated column */}
-                  <td className="p-2 sm:p-4  min-w-[120px] break-words font-[400] text-[#333333]">{supportRequest.dateCreated}</td>
-                  {/* Add chat column */}
-                  <td className="p-2 sm:p-4  min-w-[100px] break-words">
+                  <td className="py-6 px-6 min-w-[150px] break-words font-[400] text-[#333333] whitespace-nowrap">{supportRequest.issueType}</td>
+                  <td className="py-6 px-6 min-w-[100px] text-[#333333]">
+                    <ColourfulBlock className={`${getPriorityColors(supportRequest.priority)} font-[600] rounded-[12px] px-[16px] py-[8px] relative left-[-12px]`} text={supportRequest.priority} />
+                  </td>
+                  <td className="py-6 px-6 min-w-[100px] text-[#333333]">
+                    <ColourfulBlock className={`${getStatusColors(supportRequest.status)} font-[600] rounded-[12px] px-[16px] py-[8px] relative left-[-12px]`} text={supportRequest.status} />
+                  </td>
+                  <td className="py-6 px-6 min-w-[120px] break-words font-[400] text-[#333333] whitespace-nowrap">{supportRequest.dateCreated}</td>
+                  <td className="py-6 px-6 min-w-[100px] break-words">
                     <button 
                       className="underline text-primary font-[400] cursor-pointer"
                       onClick={() => onChatClick && onChatClick(supportRequest)}
@@ -148,7 +155,7 @@ const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
                       {supportRequest.chat}
                     </button>
                   </td>
-                  <td className="relative p-2 sm:p-4  min-w-[60px] text-center">
+                  <td className="py-6 px-6 min-w-[60px] text-center">
                     <div className="dropdown-container relative">
                       <button
                         className="absolute right-0 md:relative md:right-auto cursor-pointer"
@@ -180,7 +187,7 @@ const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
   export default UserTable
 
 
-      
+
 
 
 

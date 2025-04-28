@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import SystemHealthGauge from "../ui/Meter";
+import SystemHealthGauge from "../../ui/Meter";
 
 interface ServerCardProps {
   serverId: number;
