@@ -93,10 +93,10 @@ export default function Navbar() {
             {isMenuOpen && (
               <div className="absolute top-10 right-0 w-44 bg-white rounded-md shadow-lg py-3 px-4 z-10 border border-gray-100 ">
                 <div className="space-y-3">
-                  <Link href="/settings" className="block text-sm text-secondary font-semibold cursor-pointer">
+                  <Link href="/settings" onClick={()=>setIsMenuOpen(false)} className="block text-sm text-secondary font-semibold cursor-pointer">
                     Forgot Password
                   </Link>
-                  <Link href="/signin" className="block text-sm text-[#DF1D1D] font-semibold cursor-pointer">
+                  <Link href="/signin" onClick={()=>setIsMenuOpen(false)} className="block text-sm text-[#DF1D1D] font-semibold cursor-pointer">
                     Logout
                   </Link>
                 </div>
