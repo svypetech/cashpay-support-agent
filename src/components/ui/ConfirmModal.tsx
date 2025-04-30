@@ -1,15 +1,29 @@
-import React from "react";
+import React, { ReactNode } from "react";
 
-interface ConfirmDeletionModalProps {
+interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  title?: string;
+  message?: string | ReactNode;
+  warningText?: string | ReactNode;
+  cancelText?: string;
+  confirmText?: string;
+  cancelButtonClass?: string;
+  confirmButtonClass?: string;
 }
 
-const ConfirmDeletionModal: React.FC<ConfirmDeletionModalProps> = ({
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
+  title = "Confirm Action",
+  message = "Are you sure you want to proceed?",
+  warningText,
+  cancelText = "Cancel",
+  confirmText = "Confirm",
+  cancelButtonClass = "flex-1 py-2 rounded-lg border-[1px] border-[#DF1D1D] text-[#DF1D1D] font-medium cursor-pointer flex items-center justify-center",
+  confirmButtonClass = "flex-1 py-2 rounded-lg bg-[#DF1D1D] text-white font-medium hover:bg-red-700 flex items-center justify-center cursor-pointer"
 }) => {
   if (!isOpen) return null;
 
@@ -38,28 +52,30 @@ const ConfirmDeletionModal: React.FC<ConfirmDeletionModalProps> = ({
         <div className="py-[30px] px-[30px] md:px-[40px] md:py-[20px] h-full flex flex-col justify-center">
           {/* Header */}
           <h4 className="text-[25px] font-[700] border-b border-gray-200 pb-4 mb-10">
-            Confirm Account Deletion
+            {title}
           </h4>
           
           {/* Message */}
           <div className="text-center flex flex-col justify-center">
-            <p className="text-lg mb-2">Are you sure you want to delete your account?</p>
-            <p className="text-[#FF1B1B] text-sm">*This operation cannot be undone</p>
+            <p className="text-lg mb-2">{message}</p>
+            {warningText && (
+              <p className="text-[#FF1B1B] text-sm">{warningText}</p>
+            )}
           </div>
           
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-[20px] mt-[70px]">
             <button 
               onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-[#DF1D1D] text-[#DF1D1D] font-medium hover:bg-red-50 flex items-center justify-center"
+              className={cancelButtonClass}
             >
-              Cancel
+              {cancelText}
             </button>
             <button 
               onClick={onConfirm}
-              className="flex-1 py-2 rounded-lg bg-[#DF1D1D] text-white font-medium hover:bg-red-700 flex items-center justify-center"
+              className={confirmButtonClass}
             >
-              Confirm Deletion
+              {confirmText}
             </button>
           </div>
         </div>
@@ -68,4 +84,4 @@ const ConfirmDeletionModal: React.FC<ConfirmDeletionModalProps> = ({
   );
 };
 
-export default ConfirmDeletionModal;
+export default ConfirmModal;

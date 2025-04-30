@@ -3,11 +3,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useDarkMode } from "@/components/providers/DarkModeProvider"; // Import context hook
+
 import { Bell, Menu } from "lucide-react"
 
 export default function Navbar() {
-  const { darkMode } = useDarkMode() // Get dark mode state from context
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
@@ -15,7 +14,7 @@ export default function Navbar() {
       {/* Logo */}
       <Link href="/" className="flex items-center">
         <img
-          src={darkMode ? "/images/darkModeLogo.svg" : "/images/logo.svg"}
+          src={"/images/logo.svg"}
           alt="logo"
           
           className="min-[400px]:h-[34px] min-[400px]:w-[152px] h-[28px] w-[110px]"

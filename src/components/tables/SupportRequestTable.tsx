@@ -101,9 +101,9 @@ const UserTable: React.FC<Props> = ({ data, headings, onChatClick }) => {
       {/* Table */}
       <div className="rounded-lg overflow-x-auto w-full" ref={tableRef}>
         <table className="w-full text-left table-auto min-w-[800px]">
-          <thead className="bg-[#27AAE11A]">
+          <thead className="bg-secondary/10">
             
-          <tr className="bg-secondary/10 text-[12px] sm:text-[16px]">
+          <tr className="text-[12px] sm:text-[16px]">
   <th className="py-4 px-6 text-left font-[700] text-[16px] w-[12%] whitespace-nowrap">
     {headings[0]}
   </th>
