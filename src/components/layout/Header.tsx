@@ -96,7 +96,7 @@ export default function Navbar() {
                   <Link href="/settings" className="block text-sm text-secondary font-semibold cursor-pointer">
                     Forgot Password
                   </Link>
-                  <Link href="/logout" className="block text-sm text-[#DF1D1D] font-semibold cursor-pointer">
+                  <Link href="/signin" className="block text-sm text-[#DF1D1D] font-semibold cursor-pointer">
                     Logout
                   </Link>
                 </div>
