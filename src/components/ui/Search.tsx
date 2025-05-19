@@ -1,4 +1,3 @@
-import Image from "next/image"
 export default function Search({className,onSearch}:{className:string,onSearch:(value:string)=>void}){
     return(
         <div className={`relative ${className}`}>

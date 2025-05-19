@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 
-import { getFileIcon, formatFileSize } from '@/utils/chat/utils';
+import { getFileIcon, formatFileSize } from '@/utils/chat/functions';
 
 interface ChatInputProps {
   onSendMessage: (message: string, file?: File) => void;

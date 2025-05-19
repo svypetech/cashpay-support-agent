@@ -1,24 +1,23 @@
-import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+"use client"
 import "./globals.css";
-import ClientLayout from "../components/layout/Layout"; // New client component
+import {useEffect} from "react"
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  variable: "--font-montserrat",
-});
 
-export const metadata: Metadata = {
-  title: "CashPay - Your Finance Partner",
-  description: "Your Finance Partner is Coming Soon.",
-};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+      let user = localStorage.getItem("user");
+      let token = localStorage.getItem("token");
+      if (!user || !token) {
+        window.location.href = "/signin";
+      }
+    }, []);
   return (
     <html lang="en">
-      <body className={`${montserrat.variable} antialiased`}>
+      <body>
+        
         {children}
+        
       </body>
     </html>
   );

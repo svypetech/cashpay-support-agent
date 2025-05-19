@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { ChatUser } from '@/lib/types/chat';
+import { ChatUser } from '@/lib/types/Chat';
 
 
 interface ChatHeaderProps {
@@ -16,19 +16,19 @@ export default function ChatHeader({ user, onClose, isOnline = true }: ChatHeade
       {/* Header content */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative">  
             {/* User avatar */}
             <div className="w-10 h-10 rounded-full bg-pink-200 flex items-center justify-center text-pink-800">
-              {user.avatar ? (
+              {user.userImage ? (
                 <Image
-                  src={user.avatar}
-                  alt={user.name.charAt(0)}
+                  src={user.userImage}
+                  alt={user.userName.firstName.charAt(0)}
                   width={40}
                   height={40}
                   className="rounded-full"
                 />
               ) : (
-                <span>{user.name.charAt(0)}</span>
+                <span>{user.userName.firstName}</span>
               )}
             </div>
             
@@ -38,8 +38,8 @@ export default function ChatHeader({ user, onClose, isOnline = true }: ChatHeade
             }`}></div>
           </div>
           <div>
-            <h3 className="font-semibold font-inter">{user.name}</h3>
-            <p className="text-sm text-gray-500 font-inter">{user.email}</p>
+            <h3 className="font-semibold font-inter">{user.userName.firstName+ " " +user.userName.lastName}</h3>
+            {/* <p className="text-sm text-gray-500 font-inter">{user.userDetails}</p> */}
           </div>
         </div>
         {onClose && (

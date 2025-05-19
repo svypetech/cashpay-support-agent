@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import ConfirmDialog from "@/components/ui/ConfirmModal";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 // Define the form schema with Zod
 const passwordSchema = z
@@ -22,6 +24,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 export default function ChangePasswordPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -50,15 +53,29 @@ export default function ChangePasswordPage() {
 
       // Simulate API call to change password
       console.log("Changing password with:", formData);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Show success message or redirect
-      alert("Password changed successfully!");
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}admin/changePassword`,
+        {
+          oldpassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-      // Reset form or redirect
-      window.location.href = "/settings";
+      if (response.data.success) {
+        alert("Password changed successfully!");
+        router.push("/settings");
+      } else {
+        alert("Failed to change password. Please try again.");
+      }
+
+      // window.location.href = "/settings"
     } catch (error) {
-      console.error("Error changing password:", error);
       alert("Failed to change password. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -67,8 +84,8 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 font-[satoshi]">
+      <div className="w-full max-w-md bg-white rounded-lg p-8">
         <h1 className="text-2xl font-bold text-center mb-2">Change Password</h1>
         <p className="text-gray-600 text-center mb-6">
           Please enter your new Password to reset your password.
@@ -82,17 +99,13 @@ export default function ChangePasswordPage() {
             >
               Current Password
             </label>
-            
             <input
               id="currentPassword"
               type="password"
               {...register("currentPassword")}
-              className={`w-full px-3 py-2 rounded-md focus:outline-none ${
-                errors.currentPassword
-                  ? "border-[1px] border-red-500"
-                  : "border border-gray-300"
-              }`}
-              placeholder="••••••••"
+              className={`w-full px-3 py-2 border ${
+                errors.currentPassword ? "border-red-500" : "border-gray-300"
+              } rounded-md focus:outline-none focus:ring-gray-500 focus:border-gray-500`}
             />
             {errors.currentPassword && (
               <p className="mt-1 text-sm text-red-600">
@@ -115,7 +128,6 @@ export default function ChangePasswordPage() {
               className={`w-full px-3 py-2 border ${
                 errors.newPassword ? "border-red-500" : "border-gray-300"
               } rounded-md focus:outline-none focus:ring-gray-500 focus:border-gray-500`}
-              placeholder="••••••••"
             />
             {errors.newPassword && (
               <p className="mt-1 text-sm text-red-600">
@@ -138,7 +150,6 @@ export default function ChangePasswordPage() {
               className={`w-full px-3 py-2 border ${
                 errors.confirmPassword ? "border-red-500" : "border-gray-300"
               } rounded-md focus:outline-none focus:ring-gray-500 focus:border-gray-500`}
-              placeholder="••••••••"
             />
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600">
@@ -149,26 +160,24 @@ export default function ChangePasswordPage() {
 
           <button
             type="submit"
-            className="w-full bg-primary text-white font-semibold py-3 px-4 rounded-md mt-4"
+            className="w-full bg-primary hover:bg-blue-900 cursor-pointer text-white font-medium py-2 px-4 rounded-md transition-colors"
           >
             Change Password
           </button>
         </form>
       </div>
 
-      {/* Using our reusable ConfirmModal */}
-      <ConfirmModal
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
         isOpen={showConfirmation}
-        onClose={() => setShowConfirmation(false)}
-        onConfirm={handleConfirmChange}
         title="Confirm Password Change"
         message="Are you sure you want to change your password?"
-        cancelText="Cancel"
-        confirmText={isSubmitting ? "Changing..." : "Confirm Change"}
-        cancelButtonClass="flex-1 py-2 rounded-lg border-[1px] border-primary text-primary font-medium cursor-pointer flex items-center justify-center"
-        confirmButtonClass={`flex-1 py-2 rounded-lg bg-primary text-white font-medium hover:bg-blue-900 flex items-center justify-center cursor-pointer ${
-          isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-        }`}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmChange}
+        isLoading={isSubmitting}
+        confirmButtonClass="flex-1 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-blue-900 flex items-center justify-center cursor-pointer"
+        //primary color button
+        cancelButtonClass="flex-1 py-2 rounded-lg border-[1px] border-primary text-primary font-semibold cursor-pointer flex items-center justify-center"
       />
     </div>
   );

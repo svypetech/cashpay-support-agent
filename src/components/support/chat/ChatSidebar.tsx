@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Chat from './Chat';
-import { ChatUser, Message } from '@/lib/types/chat';
+import { ChatUser, Message } from '@/lib/types/Chat';
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -8,6 +8,8 @@ interface ChatSidebarProps {
   chatId: string;
   user: ChatUser;
   initialMessages?: Message[];
+  isLoading?: boolean;
+  isError?: string | null;
 }
 
 export default function ChatSidebar({ 
@@ -16,6 +18,8 @@ export default function ChatSidebar({
   chatId,
   user, 
   initialMessages = [], 
+  isLoading,
+  isError
 }: ChatSidebarProps) {
   // Animation states
   const [isVisible, setIsVisible] = useState(false);
@@ -63,6 +67,8 @@ export default function ChatSidebar({
           onClose={onClose}
           showHeader={true}
           className="h-full"
+          isLoading={isLoading}
+          isError={isError}
         />
       </div>
     </div>

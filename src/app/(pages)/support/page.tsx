@@ -25,7 +25,7 @@ export default function Support() {
   };
 
   return (
-    <div className="flex flex-col gap-4 relative p-3 sm:px-10">
+    <div className="flex flex-col gap-4 relative px-6 sm:px-10">
       <div className="flex items-center justify-center gap-4">
         <Tabs
           tabs={tabs}

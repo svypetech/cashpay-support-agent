@@ -16,6 +16,7 @@ const config: Config = {
         success: 'var(--color-success)',
         darkBg: 'var(--color-darkBg)',
         textLight: 'var(--color-textLight)',
+        
         secondaryText: 'var(--color-secondaryText)',
         gray: {
           DEFAULT: 'var(--color-gray)',

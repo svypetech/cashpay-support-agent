@@ -1,13 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Mail, Lock, Loader2 } from "lucide-react"
 import Image from "next/image"
+import axios, { AxiosError } from "axios"
+import { useRouter } from "next/navigation"
 
-// Define the form schema with Zod
+
+
+
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -18,11 +22,13 @@ type FormValues = z.infer<typeof formSchema>
 
 export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
-  // Initialize react-hook-form with zod resolver
+  
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -39,16 +45,42 @@ export default function SignIn() {
     try {
       // Simulate API call
       console.log("Form data:", data)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Redirect or handle successful login
-      window.location.href = "/dashboard"
-    } catch (error) {
-      console.error("Login failed:", error)
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}auth/loginAdmin`,{
+        email: data.email,
+        password: data.password,
+        role: "support agent",
+      }, {
+      })
+      alert("response: "+JSON.stringify(response.data))
+         
+        localStorage.setItem("token", response.data.token)
+        localStorage.setItem("user", JSON.stringify(response.data.user))
+        router.push("/support")         
+    } catch (error: any) {
+          if(error.response.data.error==="User not found"){
+            setError("email", { type: "manual", message: "User not found" })
+          }
+          else if(error.response.data.error==="Wrong Password"){
+            setError("password", { type: "manual", message: "Incorrect password" })
+          }   
+          else{
+            alert(JSON.stringify(error.response.data.error))
+          }
     } finally {
       setIsLoading(false)
     }
   }
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    const user = localStorage.getItem("user")
+    if (token && user) {
+      router.push("/support")
+    }
+  }
+  , [])
+  // Check if user is already authenticated
+  
+  
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row justify-center">
@@ -112,7 +144,7 @@ export default function SignIn() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...
                   </>
                 ) : (
                   "Login"

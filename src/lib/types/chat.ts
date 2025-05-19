@@ -1,21 +1,21 @@
 export interface Message {
-    id: string;
-    content: string;
-    timestamp: string;
-    sender: 'user' | 'agent';
-    attachment?: {
-      name: string;
-      size: string;
-      type: string;
-      url: string;
+  _id: string;
+  isRead: boolean;
+  isReplied: boolean;
+  sender: string;
+  senderType: string;
+  ticketId: string;
+  message: string;
+  date: string;
+  __v?: number;
+}
+
+export interface ChatUser {
+  
+    userName: {
+      firstName: string;
+      lastName: string;
     };
-  }
-  
-  export interface ChatUser {
-    name: string;
-    email: string;
-    avatar?: string;
-  }
+    userImage: string;
+  };
 
-
-  

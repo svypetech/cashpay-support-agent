@@ -1,89 +1,95 @@
 import { useState } from "react";
-import Tabs from "@/components/ui/Tabs";
+
 import Search from "../../ui/Search";
 import Sort from "../../ui/Sort";
-import { supportRequestsData as Data } from "@/utils/SupportRequestsData";
-
-import UserTable from "@/components/tables/SupportRequestTable";
+import SupportRequestTable from "@/components/tables/SupportRequestTable";
 import Pagination from "@/components/pagination/pagination";
 import ChatSidebar from "@/components/support/chat/ChatSidebar";
-import { ChatUser } from "@/lib/types/chat";
-import { sampleMessages } from "@/utils/chat/utils";
+import { ChatUser } from "@/lib/types/Chat";
 
+import useSupportRequestData from "@/hooks/useFetchSupportRequestData";
+import { SupportRequest } from "@/lib/types/SupportRequest";
+import SkeletonTableLoader from "@/components/skeletons/SkeletonTableLoader";
+import useFetchChat from "@/hooks/useFetchChat";
 
+const headings = [
+  "Ticket ID",
+  "User ID",
+  "Issue Type",
+  "Status",
+  "Date Created",
+  "Chat",
+  "Mark Resolved",
+];
 
-const headings = [  
-    "Ticket ID",
-    "User ID",
-    "Issue Type",
-    "Priority",
-    "Status",
-    "Date Created",
-    "Chat",
-    "Actions"
-  ]
-  
+const sortOptions = [
+  { label: "None", value: "" },
+  { label: "Date", value: "date" },
+  { label: "Status", value: "status" },
+];
 export default function MainSection() {
-  const [data, setData] = useState(Data);
-  const [filteredData, setFilteredData] = useState(Data);
-  const [activeTab, setActiveTab] = useState("All");
-  const tabs = ["All", "Unassigned", "Assigned"];
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(15);
-  
   const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
-  const [currentChatUser, setCurrentChatUser] = useState<ChatUser | null>(null);
   const [currentChatId, setCurrentChatId] = useState<string>("");
+  const [sortBy, setSortBy] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
 
-  
+  const { requests, isLoading, isError, totalPages, setRequests } =
+    useSupportRequestData({
+      currentPage,
+      sortBy,
+      searchQuery,
+    });
+
+  const { messages, isLoading:isChatLoading, isError:isChatError, currentChatUser,setMessages,setCurrentChatUser } = useFetchChat({chatId: currentChatId, setChatSidebarOpen});
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-  
-  const handleSearch = (value: string) => {
-    const filtered = data.filter((item) =>
-      item.userId.toString().includes(value)
-    );
-    setFilteredData(filtered);
-  };
+
+  // const handleSearch = (value: string) => {
+  //   const filtered = data.filter((item) =>
+  //     item.userId.toString().includes(value)
+  //   );
+  //   setFilteredData(filtered);
+  // };
 
   // Handle chat click from table
-  const handleChatClick = (supportRequest: any) => {
-    setCurrentChatUser({
-      name: supportRequest.userId || "John Doe", // Replace with actual field name
-      email: supportRequest.email || "johndoe@gmail.com", // Replace with actual field name
-      avatar: supportRequest.avatar, // Optional
-    });
-    setCurrentChatId(supportRequest.ticketId || supportRequest.id || Date.now().toString());
-    setChatSidebarOpen(true);
+  const handleChatClick = (supportRequest: SupportRequest) => {
+    setCurrentChatId(supportRequest._id);
+  };
+  const handleChatClose = () => {
+    setChatSidebarOpen(false);
+    setCurrentChatId("");
+    setMessages([]);
+    setCurrentChatUser({} as ChatUser);
   };
 
   // Handle sending message
-  
 
   return (
     <div className="flex flex-col gap-4 relative">
-      <div className="flex gap-4">
-        <Tabs
-          tabs={tabs}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          size="small"
+      <div className="flex flex-col gap-4 sm:flex-row sm:gap-10">
+        <Search className="sm:w-[80%] w-full" onSearch={setSearchQuery} />
+        <Sort
+          className="sm:w-[20%] w-full"
+          title="Sort"
+          options={sortOptions}
+          onSort={setSortBy}
         />
       </div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:gap-10">
-        <Search className="sm:w-[80%] w-full" onSearch={handleSearch} />
-        <Sort className="sm:w-[20%] w-full" title="Sort"/>
-        
-      </div>
-      
-      <UserTable 
-        headings={headings} 
-        data={filteredData} 
-        onChatClick={handleChatClick} 
-      />
-      
+      {isLoading ? (
+        <SkeletonTableLoader headings={headings} />
+      ) : (
+        <SupportRequestTable
+          headings={headings}
+          supportRequests={requests}
+          onChatClick={handleChatClick}
+          setRequests={setRequests}
+        />
+      )}
+
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -91,16 +97,17 @@ export default function MainSection() {
       />
 
       {/* Chat Sidebar */}
-      {currentChatUser && (
+      
         <ChatSidebar
           isOpen={chatSidebarOpen}
-          onClose={() => setChatSidebarOpen(false)}
+          onClose={handleChatClose}
           chatId={currentChatId}
           user={currentChatUser}
-          initialMessages={sampleMessages}
-          
+          initialMessages={messages}
+          isLoading={isChatLoading}
+          isError={isChatError}
         />
-      )}
+      
     </div>
   );
 }

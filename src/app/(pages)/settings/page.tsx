@@ -1,84 +1,249 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import Image from "next/image"
-import { ChevronRight } from "lucide-react"
-import Link from "next/link"
-import ConfirmModal from "@/components/ui/ConfirmModal"  // Import the ConfirmModal
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
 
 export default function SettingsPage() {
-  
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "John Doe",
-    email: "johndoe@news.com",
-  })
-  
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Form schema with Zod validation
+  const formSchema = z.object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    email: z.string().email({ message: "Invalid email address" }),
+    image: z.string().optional(),
+  });
 
-  const handleEdit = () => {
-    if (isEditing) {
-      // Save changes logic would go here
-      console.log("Saving changes:", formData)
+  type FormValues = z.infer<typeof formSchema>;
+  const [user, setUser] = useState<FormValues | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [image, setImage] = useState<string>("/images/user-avatar.png");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize form with react-hook-form and zod resolver
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    mode: "onSubmit",
+  });
+
+  // Load user data from localStorage on component mount
+  useEffect(() => {
+    try {
+      const user = localStorage.getItem("user");
+      if (user) {
+        const parsedInfo = JSON.parse(user);
+        setUser(parsedInfo);
+        if (parsedInfo.hasOwnProperty("name")) {
+          setValue("name", parsedInfo.name);
+        }
+        setValue("email", parsedInfo.email);
+
+        // Load profile image if available
+        if (parsedInfo.hasOwnProperty("image")) {
+          setImage(parsedInfo.image);
+        }
+      }
+    } catch (error) {
+      alert("Error loading user data");
     }
-    setIsEditing(!isEditing)
-  }
+  }, [setValue]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  // Function to handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      setImageFile(file);
 
-  
+      // Create a preview URL for the selected image
+      const objectUrl = URL.createObjectURL(file);
+      setImage(objectUrl);
+    }
+  };
+
+  // Function to trigger file input click
+  const handleEditProfilePicture = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        try {
+          const uploadResponse = await axios.put(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}admin/updatePic`,
+            { file: formData.get("image") },
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          // If image upload successful, get the image URL from response
+          if (uploadResponse.data && uploadResponse.data.image) {
+            data = { ...data, image: uploadResponse.data.image };
+            setImage(uploadResponse.data.image);
+            localStorage.setItem(
+              "user",
+              JSON.stringify({ ...user, image: uploadResponse.data.image })
+            );
+
+            if (user && user.name && user.email) {
+              setUser({
+                name: user.name,
+                email: user.email,
+                image: uploadResponse.data.image,
+              });
+            }
+          }
+        } catch (error) {
+          alert(
+            "Failed to upload image: " + JSON.stringify(error.response.data)
+          );
+          return;
+        }
+        alert(
+          "data email: " +
+            data.email +
+            " user email: " +
+            user?.email +
+            " data name: " +
+            data.name +
+            " user name: " +
+            user?.name
+        );
+
+        if (data.email == user?.email && data.name == user?.name) {
+          alert("No changes made to the profile");
+          return;
+        }
+      }
+
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}admin`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        localStorage.setItem("user", JSON.stringify({ ...user, ...data }));
+        setUser({ ...user, ...data });
+        setIsEditing(false);
+        setImageFile(null);
+        alert("Profile updated successfully");
+      } else {
+        alert("Failed to update profile");
+      }
+    } catch (error) {
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Toggle edit mode
+  const handleDiscard = () => {
+    if (isEditing) {
+      try {
+        if (user) {
+          setValue("email", user.email);
+          setValue("name", user.name);
+          setImage(user.image || "/images/user-avatar.png");
+        }
+      } catch (error) {
+        alert("Error discarding changes");
+      }
+    }
+    setIsEditing(!isEditing);
+  };
 
   // Handle account deletion
-  const handleDeleteAccount = () => {
-    setIsSubmitting(true)
-    // Simulate API call for account deletion
-    console.log("Deleting account...")
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setShowDeleteDialog(false)
-      // Navigate to sign out or home page after deletion
-      
-    }, 1500)
-  }
+  const handleDeleteAccount = async () => {
+    setIsSubmitting(true);
+    try {
+      const user = localStorage.getItem("user");
+      if (!user) {
+        throw new Error("User information not found");
+      }
+
+      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin`, {
+        headers: {
+          Authorization: `Bearer ${JSON.parse(user).token}`,
+        },
+      });
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      setShowDeleteDialog(false);
+      window.location.href = "/login";
+    } catch (error) {
+      alert("Failed to delete account");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-10 py-8 font-[satoshi]">
-      <div className={`flex ${isEditing? "flex-col" : ""} sm:flex-row sm:items-center justify-between mb-4`}>
+      <div
+        className={`flex ${
+          isEditing ? "flex-col" : ""
+        } sm:flex-row sm:items-center justify-between mb-4`}
+      >
         <h1 className="text-2xl font-bold mb-2 sm:mb-0">Settings</h1>
 
         {isEditing ? (
           <div className="flex flex-row items-center gap-2">
             <button
-              onClick={handleEdit}
+              type="button"
+              onClick={handleDiscard}
               className="flex-1 sm:flex-none cursor-pointer px-4 py-1.5 border font-semibold border-primary rounded-md text-primary hover:bg-blue-50 text-sm sm:text-base"
             >
               Discard
             </button>
             <button
-              onClick={handleEdit}
+              type="button"
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting}
               className="flex-1 sm:flex-none cursor-pointer px-4 py-1.5 border font-semibold border-primary rounded-md text-white bg-primary hover:bg-blue-900 text-sm sm:text-base"
             >
-              Save
+              {isSubmitting ? "Saving..." : "Save"}
             </button>
           </div>
         ) : (
           <button
-            onClick={handleEdit}
+            type="button"
+            onClick={() => setIsEditing(true)}
             className="cursor-pointer px-4 py-1.5 border font-semibold border-primary rounded-md text-primary hover:bg-blue-50 text-sm sm:text-base"
           >
             Edit
           </button>
         )}
       </div>
-      <p className="text-gray-500 text-sm mb-8">Manage your account settings and preferences</p>
+      <p className="text-gray-500 text-sm mb-8">
+        Manage your account settings and preferences
+      </p>
 
       <div className="border-t border-gray-200 pt-6">
-        {/* Account Information section remains unchanged */}
+        {/* Account Information section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Account Information - 1 column */}
           <div className="mx-10 md:mx-0 md:col-span-1">
@@ -91,25 +256,41 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-6">
               {/* Profile Photo - 1 column within the 3 columns */}
               <div className="md:col-span-1">
-                <div className="flex flex-col ">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Profile Photo</h3>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    Profile Photo
+                  </h3>
                   <div className="relative w-36 h-36 overflow-hidden p-2">
                     <Image
-                      src={"/images/user-avatar.png"}
-                      alt={"user avatar"}
+                      src={image}
+                      alt="User avatar"
                       width={128}
                       height={128}
                       className="object-cover w-full h-full rounded-full"
+                      unoptimized={image.includes(".image/")} // Skip optimization for problematic URLs
+                      onError={() => {
+                        // Fall back to default avatar if the image fails to load
+                        setImage("/images/user-avatar.png");
+                      }}
+                    />
+
+                    {/* Hidden file input */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
                     />
                     {isEditing && (
                       <button
-                        onClick={() => console.log("Edit profile picture")}
+                        onClick={handleEditProfilePicture}
                         className="z-10 absolute top-0 right-0 p-1.5 rounded-full hover:scale-105 cursor-pointer transition-colors"
                         aria-label="Edit profile picture"
                       >
                         <Image
                           src={"/icons/edit.svg"}
-                          alt={"user avatar"}
+                          alt="Edit avatar"
                           width={22}
                           height={22}
                           className="h-full w-full object-cover"
@@ -124,33 +305,48 @@ export default function SettingsPage() {
               <div className="md:col-span-3">
                 <div className="space-y-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Name
                     </label>
                     <input
-                      type="text"
+                      {...register("name")}
                       id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
                       disabled={!isEditing}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      className={`w-full px-3 py-2 border ${
+                        errors.name ? "border-red-500" : "border-gray-300"
+                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500`}
                     />
+                    {errors.name && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.name.message}
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Email
                     </label>
                     <input
+                      {...register("email")}
                       type="email"
                       id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
                       disabled={!isEditing}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      className={`w-full px-3 py-2 border ${
+                        errors.email ? "border-red-500" : "border-gray-300"
+                      } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500`}
                     />
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red-500">
+                        {errors.email.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -160,10 +356,19 @@ export default function SettingsPage() {
 
         {/* Action Items */}
         <div className="mt-8 space-y-4 border-t border-gray-200 pt-6">
-          <Link href={"/change-password"} className="w-full cursor-pointer border-b border-gray-300 flex items-center justify-between py-3 px-1 text-left group">
+          <Link
+            href={"/change-password"}
+            className="w-full cursor-pointer border-b border-gray-300 flex items-center justify-between py-3 px-1 text-left group"
+          >
             <div className="flex items-center">
               <div className="mr-3 text-gray-400">
-                <Image src="/icons/lock-icon.svg" alt="Lock Icon" width={20} height={20} className="h-6 w-6" />
+                <Image
+                  src="/icons/lock-icon.svg"
+                  alt="Lock Icon"
+                  width={20}
+                  height={20}
+                  className="h-6 w-6"
+                />
               </div>
               <span className="font-medium">Change password</span>
             </div>
@@ -171,17 +376,22 @@ export default function SettingsPage() {
           </Link>
 
           <div className="border-t border-gray-100"></div>
-
           <div className="border-t border-gray-100"></div>
 
-          {/* Changed from Link to button */}
-          <button 
-            onClick={() => setShowDeleteDialog(true)} 
+          {/* Delete Account button */}
+          <button
+            onClick={() => setShowDeleteDialog(true)}
             className="w-full cursor-pointer border-b border-gray-300 flex items-center justify-between py-3 px-1 text-left hover:bg-gray-50 rounded-md group"
           >
             <div className="flex items-center">
               <div className="mr-3 text-red-500">
-                <Image src="/icons/trash-can.svg" alt="Delete" width={20} height={20} className="h-5 w-5" />
+                <Image
+                  src="/icons/trash-can.svg"
+                  alt="Delete"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5"
+                />
               </div>
               <span className="font-medium text-red-500">Delete Account</span>
             </div>
@@ -200,9 +410,7 @@ export default function SettingsPage() {
         warningText="*This operation cannot be undone"
         confirmText="Delete Account"
         cancelText="Cancel"
-        
-        // Default button styles will be used
       />
     </div>
-  )
+  );
 }
