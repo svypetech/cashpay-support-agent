@@ -118,19 +118,10 @@ export default function SettingsPage() {
           );
           return;
         }
-        alert(
-          "data email: " +
-            data.email +
-            " user email: " +
-            user?.email +
-            " data name: " +
-            data.name +
-            " user name: " +
-            user?.name
-        );
+
 
         if (data.email == user?.email && data.name == user?.name) {
-          alert("No changes made to the profile");
+          
           return;
         }
       }
@@ -193,7 +184,7 @@ export default function SettingsPage() {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       setShowDeleteDialog(false);
-      window.location.href = "/login";
+      window.location.href = "/signin";
     } catch (error) {
       alert("Failed to delete account");
     } finally {

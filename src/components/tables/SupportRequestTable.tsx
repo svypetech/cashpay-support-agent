@@ -25,9 +25,9 @@ const SupportRequestTable = ({
   const tableRef = useRef<HTMLDivElement>(null);
 
   const markResolved = async (requestId: string,status: string) => {
-    alert("Status: " + status);
     
-    alert("Request ID: " + requestId);
+    
+    
     if(status.toLowerCase() === "resolved") return;
     try {
       await axios.put(

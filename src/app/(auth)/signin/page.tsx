@@ -51,7 +51,7 @@ export default function SignIn() {
         role: "support agent",
       }, {
       })
-      alert("response: "+JSON.stringify(response.data))
+        
          
         localStorage.setItem("token", response.data.token)
         localStorage.setItem("user", JSON.stringify(response.data.user))

@@ -40,7 +40,7 @@ export default function UserProfileSidebar({
 
   const handleVerifyUser = async () => {
     setIsVerifying(true);
-    alert("Token: " + localStorage.getItem("token"));
+    
 
     try {
       await axios.put(

@@ -86,10 +86,7 @@ export default function VerificationAccordion({
   const closeImageModal = () => {
     setModalImage(null);
   }
-  useEffect(()=>{
-    alert("Id Url:" + document.url + " Selfie Url: " + selfieDocument.url)
-
-  },[])
+  
 
   return (
     <>
