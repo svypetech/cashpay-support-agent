@@ -1,30 +1,28 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Mail, Lock, Loader2 } from "lucide-react"
-import Image from "next/image"
-import axios, { AxiosError } from "axios"
-import { useRouter } from "next/navigation"
-
-
-
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Mail, Lock, Loader2 } from "lucide-react";
+import Image from "next/image";
+import axios, { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-})
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
+});
 
 // Infer the type from the schema
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 export default function SignIn() {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  
   const {
     register,
     handleSubmit,
@@ -36,51 +34,48 @@ export default function SignIn() {
       email: "",
       password: "",
     },
-  })
+  });
 
   // Handle form submission
   const onSubmit = async (data: FormValues) => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // Simulate API call
-      console.log("Form data:", data)
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}auth/loginAdmin`,{
-        email: data.email,
-        password: data.password,
-        role: "support agent",
-      }, {
-      })
-        
-         
-        localStorage.setItem("token", response.data.token)
-        localStorage.setItem("user", JSON.stringify(response.data.user))
-        router.push("/support")         
+      console.log("Form data:", data);
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}auth/loginAdmin`,
+        {
+          email: data.email,
+          password: data.password,
+          role: "support agent",
+        },
+        {}
+      );
+
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      router.push("/support");
     } catch (error: any) {
-          if(error.response.data.error==="User not found"){
-            setError("email", { type: "manual", message: "User not found" })
-          }
-          else if(error.response.data.error==="Wrong Password"){
-            setError("password", { type: "manual", message: "Incorrect password" })
-          }   
-          else{
-            alert(JSON.stringify(error.response.data.error))
-          }
+      if (error.response.data.error === "User not found") {
+        setError("email", { type: "manual", message: "User not found" });
+      } else if (error.response.data.error === "Wrong Password") {
+        setError("password", { type: "manual", message: "Incorrect password" });
+      } else {
+        alert(JSON.stringify(error.response.data.error));
+      }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    const user = localStorage.getItem("user")
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
     if (token && user) {
-      router.push("/support")
+      router.push("/support");
     }
-  }
-  , [])
+  }, []);
   // Check if user is already authenticated
-  
-  
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row justify-center">
@@ -93,12 +88,20 @@ export default function SignIn() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
                 E-mail
               </label>
               <div className="relative mt-2">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <Image src={'/icons/email-icon.svg'} alt="Email Icon" height={20} width={20} />
+                  <Image
+                    src={"/icons/email-icon.svg"}
+                    alt="Email Icon"
+                    height={20}
+                    width={20}
+                  />
                 </div>
                 <input
                   id="email"
@@ -106,21 +109,35 @@ export default function SignIn() {
                   autoComplete="email"
                   {...register("email")}
                   className={`block w-full rounded-md border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ${
-                    errors.email ? "ring-red-300 focus:ring-red-500" : "ring-gray-300 focus:ring-gray-400"
+                    errors.email
+                      ? "ring-red-300 focus:ring-red-500"
+                      : "ring-gray-300 focus:ring-gray-400"
                   } placeholder:text-gray-400 focus:ring focus:ring-inset sm:text-sm sm:leading-6`}
                   placeholder="Enter your e-mail"
                 />
               </div>
-              {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>}
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-600">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
                 Password
               </label>
               <div className="relative mt-2">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Image src={'/icons/lock-icon.svg'} alt="Email Icon" height={20} width={20} />
+                  <Image
+                    src={"/icons/lock-icon.svg"}
+                    alt="Email Icon"
+                    height={20}
+                    width={20}
+                  />
                 </div>
                 <input
                   id="password"
@@ -128,12 +145,18 @@ export default function SignIn() {
                   autoComplete="current-password"
                   {...register("password")}
                   className={`block w-full rounded-md border-0 py-2.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ${
-                    errors.password ? "ring-red-300 focus:ring-red-500" : "ring-gray-300 focus:ring-gray-400"
+                    errors.password
+                      ? "ring-red-300 focus:ring-red-500"
+                      : "ring-gray-300 focus:ring-gray-400"
                   } placeholder:text-gray-400 focus:ring focus:ring-inset sm:text-sm sm:leading-6`}
                   placeholder="Enter password"
                 />
               </div>
-              {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
+              {errors.password && (
+                <p className="mt-2 text-sm text-red-600">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -144,7 +167,8 @@ export default function SignIn() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please
+                    wait...
                   </>
                 ) : (
                   "Login"
@@ -166,5 +190,5 @@ export default function SignIn() {
         />
       </div>
     </div>
-  )
+  );
 }

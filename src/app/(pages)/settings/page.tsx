@@ -112,7 +112,7 @@ export default function SettingsPage() {
               });
             }
           }
-        } catch (error) {
+        } catch (error: any) {
           alert(
             "Failed to upload image: " + JSON.stringify(error.response.data)
           );
