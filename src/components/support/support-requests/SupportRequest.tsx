@@ -71,9 +71,9 @@ export default function MainSection() {
   return (
     <div className="flex flex-col gap-4 relative">
       <div className="flex flex-col gap-4 sm:flex-row sm:gap-10">
-        <Search className="sm:w-[80%] w-full" onSearch={setSearchQuery} />
+        <Search className="sm:w-[70%] w-full" onSearch={setSearchQuery} />
         <Sort
-          className="sm:w-[20%] w-full"
+          className="sm:w-[30%] w-full"
           title="Sort"
           options={sortOptions}
           onSort={setSortBy}

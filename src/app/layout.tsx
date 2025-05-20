@@ -1,24 +1,23 @@
-"use client"
+"use client";
 import "./globals.css";
-import {useEffect} from "react"
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { AuthenticateUser } from "@/utils/functions";
 
-
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
   useEffect(() => {
-      let user = localStorage.getItem("user");
-      let token = localStorage.getItem("token");
-      if (!user || !token) {
-        window.location.href = "/signin";
-      }
-    }, []);
+    if (!AuthenticateUser()) {
+      router.push("/signin");
+    }
+  }, []);
   return (
     <html lang="en">
-      <body>
-        
-        {children}
-        
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

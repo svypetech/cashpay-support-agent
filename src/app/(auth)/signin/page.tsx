@@ -8,6 +8,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import Image from "next/image";
 import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
+import { AuthenticateUser } from "@/utils/functions";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -69,9 +70,7 @@ export default function SignIn() {
     }
   };
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
-    if (token && user) {
+    if (AuthenticateUser()) {
       router.push("/support");
     }
   }, []);

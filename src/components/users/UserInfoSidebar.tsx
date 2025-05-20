@@ -7,8 +7,7 @@ import VerificationSteps from "./VerficationStatus";
 import VerificationAccordion from "./VerificationForm";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
-import {User} from "@/lib/types/User"
-
+import { User } from "@/lib/types/User";
 
 interface UserProfileSidebarProps {
   showSidebar: boolean;
@@ -40,7 +39,6 @@ export default function UserProfileSidebar({
 
   const handleVerifyUser = async () => {
     setIsVerifying(true);
-    
 
     try {
       await axios.put(
@@ -116,10 +114,10 @@ export default function UserProfileSidebar({
           slideIn ? "translate-x-0" : "translate-x-full"
         }`}
       >
-
         {verificationStarted ? (
           <div className="flex flex-col h-full justify-between pb-5">
             <div className="flex h-full flex-col overflow-y-auto">
+              {/* Header - Centered */}
               <div className="flex items-center justify-between px-6 py-4 mt-5">
                 <div></div>
                 <button
@@ -133,8 +131,9 @@ export default function UserProfileSidebar({
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <div className="flex flex-col items-center px-6 py-8 font-[satoshi]">
-                <div className="mb-4 flex w-full items-center justify-between gap-10 px-5">
+              {/* Content - Centered */}
+              <div className="flex flex-col items-center px-6 py-8 font-[satoshi] mx-auto max-w-[420px]">
+                <div className="mb-4 flex w-full items-center justify-between gap-5 px-5">
                   <h4 className="text-2xl font-semibold text-center">
                     KYC Verification
                   </h4>
@@ -167,16 +166,18 @@ export default function UserProfileSidebar({
                 />
               </div>
             </div>
-            <div className="px-16">
+            {/* Button - Centered */}
+            <div className="px-6 flex justify-center">
               <button
                 onClick={handleVerifyUser}
                 disabled={isVerifying}
-                className="flex w-full justify-center cursor-pointer rounded-md bg-primary px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-900 disabled:opacity-70"
+                className="w-full max-w-[320px] cursor-pointer rounded-md bg-primary px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-900 disabled:opacity-70"
               >
                 {isVerifying ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin">
-                    Please Wait...
-                  </Loader2>
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <span>Please Wait...</span>
+                  </div>
                 ) : (
                   "Verify User"
                 )}
@@ -196,24 +197,32 @@ export default function UserProfileSidebar({
                 <X className="h-6 w-6" />
               </button>
             </div>
-            {/* Content */}
-            <div className="flex flex-col items-center px-6 py-8 font-[satoshi]">
-              {/* Profile Image */}
-              <div className="mb-4 h-32 w-32 overflow-hidden rounded-full">
+            {/* Content - All containers centered */}
+            <div className="flex flex-col items-center px-6 py-8 font-[satoshi] mx-auto max-w-[420px] w-full">
+              {/* Profile Image - Centered */}
+              <div className="mb-4 h-32 w-32 overflow-hidden rounded-full flex items-center justify-center">
                 <img
-                  src={user.selfieUrl || "/placeholder.svg?height=200&width=200"}
-                  alt={user.name && user.name.firstName + " " + user.name.lastName}
+                  src={
+                    user.selfieUrl || "/placeholder.svg?height=200&width=200"
+                  }
+                  alt={
+                    user.name && user.name.firstName + " " + user.name.lastName
+                  }
                   className="h-full w-full object-cover"
                 />
               </div>
-              {/* User Info */}
-              <h3 className="mb-1 text-xl font-semibold">
-                {user.name.firstName + " " + user.name.lastName}
-              </h3>
-              <p className="mb-6 text-sm text-gray-500">User ID: {user._id}</p>
-              <div className="flex flex-col justify-center mb-6">
+              {/* User Info - Centered */}
+              <div className="text-center w-full mb-6">
+                <h3 className="mb-1 text-xl font-semibold">
+                  {user.name.firstName + " " + user.name.lastName}
+                </h3>
+                <p className="text-sm text-gray-500">User ID: {user._id}</p>
+              </div>
+
+              {/* User Details - Centered */}
+              <div className="flex flex-col justify-center mb-6 w-full min-w-[400px] px-10">
                 <div className="mb-2 flex w-full items-center">
-                  <div className="flex w-full gap-5">
+                  <div className="flex w-full gap-1 w-full">
                     <div className="flex gap-2 w-24">
                       <Image
                         src="/icons/sms.svg"
@@ -224,11 +233,11 @@ export default function UserProfileSidebar({
                       />
                       <span className="font-bold">Email</span>
                     </div>
-                    <span>{user.email}</span>
+                    <span className="">{user.email}</span>
                   </div>
                 </div>
                 <div className="mb-2 flex w-full items-center">
-                  <div className="flex w-full gap-5">
+                  <div className="flex w-full gap-1">
                     <div className="flex gap-2 w-24">
                       <Image
                         src="/icons/calendar.svg"
@@ -243,13 +252,15 @@ export default function UserProfileSidebar({
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col justify-center">
-                {/* KYC Verification */}
-                <div className="mb-4 flex w-full items-center justify-between gap-10">
+
+              {/* KYC Verification Section - Centered */}
+              <div className="flex flex-col justify-center w-full max-w-[380px]">
+                {/* KYC Header - Centered */}
+                <div className="mb-4 flex w-full items-center justify-between gap-5 ">
                   <h4 className="text-2xl font-semibold text-center">
                     KYC Verification
                   </h4>
-                  {user.verificationStatus === "Verified" && (
+                  {user.verificationStatus.toLowerCase() === "approved" && (
                     <span className="rounded-xl font-bold px-4 py-2 text bg-[#71FB5533] text-[#20C000]">
                       Verified
                     </span>
@@ -260,7 +271,8 @@ export default function UserProfileSidebar({
                     </span>
                   )}
                 </div>
-                {/* Verification Badge */}
+
+                {/* Verification Badge - Centered */}
                 {user.verificationStatus === "Approved" && (
                   <div className="mb-12 flex justify-center">
                     <div className="relative">
@@ -281,11 +293,15 @@ export default function UserProfileSidebar({
                     </div>
                   </div>
                 )}
+
+                {/* Verification Steps - Centered */}
                 {user.verificationStatus === "Pending" && (
-                  <VerificationSteps
-                    steps={steps}
-                    onStartVerification={handleStartVerification}
-                  />
+                  <div className="w-full flex justify-center">
+                    <VerificationSteps
+                      steps={steps}
+                      onStartVerification={handleStartVerification}
+                    />
+                  </div>
                 )}
               </div>
             </div>

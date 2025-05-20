@@ -4,7 +4,6 @@ import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 import { Message, ChatUser } from "@/lib/types/chat";
-import axios from "axios";
 import MessageListSkeleton from "@/components/skeletons/MessageListSkeleton";
 import ChatHeaderSkeleton from "@/components/skeletons/ChatHeaderSkeleton";
 interface ChatProps {
