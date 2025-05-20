@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Search from "../../ui/Search";
 import Sort from "../../ui/Sort";
@@ -34,7 +34,6 @@ export default function MainSection() {
   const [sortBy, setSortBy] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-
   const { requests, isLoading, isError, totalPages, setRequests } =
     useSupportRequestData({
       currentPage,
@@ -42,18 +41,20 @@ export default function MainSection() {
       searchQuery,
     });
 
-  const { messages, isLoading:isChatLoading, isError:isChatError, currentChatUser,setMessages,setCurrentChatUser } = useFetchChat({chatId: currentChatId, setChatSidebarOpen});
+  const {
+    messages,
+    isLoading: isChatLoading,
+    isError: isChatError,
+    currentChatUser,
+    setMessages,
+    setCurrentChatUser,
+  } = useFetchChat({ chatId: currentChatId, setChatSidebarOpen });
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  // const handleSearch = (value: string) => {
-  //   const filtered = data.filter((item) =>
-  //     item.userId.toString().includes(value)
-  //   );
-  //   setFilteredData(filtered);
-  // };
+  
 
   // Handle chat click from table
   const handleChatClick = (supportRequest: SupportRequest) => {
@@ -65,6 +66,10 @@ export default function MainSection() {
     setMessages([]);
     setCurrentChatUser({} as ChatUser);
   };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortBy]);
 
   // Handle sending message
 
@@ -97,17 +102,16 @@ export default function MainSection() {
       />
 
       {/* Chat Sidebar */}
-      
-        <ChatSidebar
-          isOpen={chatSidebarOpen}
-          onClose={handleChatClose}
-          chatId={currentChatId}
-          user={currentChatUser}
-          initialMessages={messages}
-          isLoading={isChatLoading}
-          isError={isChatError}
-        />
-      
+
+      <ChatSidebar
+        isOpen={chatSidebarOpen}
+        onClose={handleChatClose}
+        chatId={currentChatId}
+        user={currentChatUser}
+        initialMessages={messages}
+        isLoading={isChatLoading}
+        isError={isChatError}
+      />
     </div>
   );
 }
