@@ -5,7 +5,7 @@ import Sort from "../../ui/Sort";
 import SupportRequestTable from "@/components/tables/SupportRequestTable";
 import Pagination from "@/components/pagination/pagination";
 import ChatSidebar from "@/components/support/chat/ChatSidebar";
-import { ChatUser } from "@/lib/types/Chat";
+import { ChatUser } from "@/lib/types/chat";
 
 import useSupportRequestData from "@/hooks/useFetchSupportRequestData";
 import { SupportRequest } from "@/lib/types/SupportRequest";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
-import { ChatUser } from "@/lib/types/Chat";
+import { ChatUser } from "@/lib/types/chat";
 import Search from "../../ui/Search";
 
 interface ChatListProps {

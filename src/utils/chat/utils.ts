@@ -1,4 +1,4 @@
-import { Message } from "@/lib/types/Chat";
+import { Message } from "@/lib/types/chat";
 export const sampleMessages: Message[] = [
   // Today's messages
   {

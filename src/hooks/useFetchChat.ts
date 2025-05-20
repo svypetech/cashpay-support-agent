@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { ChatUser, Message } from "@/lib/types/Chat";
+import { ChatUser, Message } from "@/lib/types/chat";
 
 
 export default function useFetchChat({chatId, setChatSidebarOpen}: {chatId: string, setChatSidebarOpen: (open: boolean) => void}) {

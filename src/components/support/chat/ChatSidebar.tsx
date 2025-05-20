@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Chat from './Chat';
-import { ChatUser, Message } from '@/lib/types/Chat';
+import { ChatUser, Message } from '@/lib/types/chat';
 
 interface ChatSidebarProps {
   isOpen: boolean;

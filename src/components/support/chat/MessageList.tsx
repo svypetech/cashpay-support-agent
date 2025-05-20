@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import MessageItem from './MessageItem';
-import { Message } from '@/lib/types/Chat';
+import { Message } from '@/lib/types/chat';
 import { groupMessagesByDate } from '@/utils/chat/functions';
 import { format, isToday, isYesterday, differenceInDays } from 'date-fns';
 

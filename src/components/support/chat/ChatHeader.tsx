@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { ChatUser } from '@/lib/types/Chat';
+import { ChatUser } from '@/lib/types/chat';
 
 
 interface ChatHeaderProps {

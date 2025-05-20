@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { Message } from "@/lib/types/Chat";
+import { Message } from "@/lib/types/chat";
 import { getFileIcon } from "@/utils/chat/functions";
 
 import { formatMessageTime } from "@/utils/chat/functions";

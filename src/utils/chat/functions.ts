@@ -1,4 +1,4 @@
-import { Message } from '@/lib/types/Chat';
+import { Message } from '@/lib/types/chat';
 import { format, startOfDay } from 'date-fns';
 
 interface MessageGroup {

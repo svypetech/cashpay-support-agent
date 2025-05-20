@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ChatList from "./ChatList";
 import Chat from "./Chat";
-import { Message, ChatUser } from "@/lib/types/Chat";
+import { ChatUser } from "@/lib/types/chat";
 import { sampleMessages } from "@/utils/chat/functions";
 import Image from "next/image";
 
