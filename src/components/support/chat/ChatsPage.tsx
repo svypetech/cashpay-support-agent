@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import ChatList from "./ChatList";
 import Chat from "./Chat";
-import { Message, ChatUser } from "@/lib/types/chat";
-import { sampleMessages } from "@/utils/chat/utils";
+import { Message, ChatUser } from "@/lib/types/Chat";
+import { sampleMessages } from "@/utils/chat/functions";
 import Image from "next/image";
 
 export default function ChatsPage() {
@@ -55,9 +55,9 @@ export default function ChatsPage() {
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-pink-200 flex items-center justify-center">
             {user.avatar ? (
-              <Image src={user.avatar} alt={user.name} width={32} height={32} className="rounded-full" />
+              <Image src={user.avatar} alt={"avatar"} width={32} height={32} className="rounded-full" />
             ) : (
-              <span>{user.name.charAt(0)}</span>
+              <span>{user.name && user.name.charAt(0)}</span>
             )}
           </div>
           <div>
