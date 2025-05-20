@@ -11,11 +11,13 @@ export interface Message {
 }
 
 export interface ChatUser {
-  
     userName: {
       firstName: string;
       lastName: string;
     };
     userImage: string;
+    avatar?: string;
+    name?:string;
+    email?:string
   };
 
