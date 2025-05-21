@@ -15,7 +15,7 @@ interface ChatProps {
   showHeader?: boolean;
   className?: string;
   isLoading?: boolean;
-  isError?: string | null;
+  isError?: boolean;
 }
 
 export default function Chat({

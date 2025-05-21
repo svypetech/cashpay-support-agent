@@ -6,7 +6,7 @@ import { ChatUser, Message } from "@/lib/types/chat";
 export default function useFetchChat({chatId, setChatSidebarOpen}: {chatId: string, setChatSidebarOpen: (open: boolean) => void}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState<string | null>(null);
+  const [isError, setIsError] = useState<boolean>(false);
   const [currentChatUser, setCurrentChatUser] = useState<ChatUser>({} as ChatUser);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function useFetchChat({chatId, setChatSidebarOpen}: {chatId: stri
     try {
       fetchMessages();
     } catch (error: any) {
-      alert(JSON.stringify(error.response.data.error));
+      setIsError(true)
     }
   }, [chatId]);
 

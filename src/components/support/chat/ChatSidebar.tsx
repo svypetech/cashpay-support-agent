@@ -9,7 +9,7 @@ interface ChatSidebarProps {
   user: ChatUser;
   initialMessages?: Message[];
   isLoading?: boolean;
-  isError?: string | null;
+  isError?: boolean;
 }
 
 export default function ChatSidebar({ 
