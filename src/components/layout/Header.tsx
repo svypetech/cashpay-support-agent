@@ -43,12 +43,12 @@ export default function Navbar() {
       </Link>
 
       <div className="flex items-center gap-4 md:hidden">
-        <button
+        {/* <button
           aria-label="Notifications"
           className="relative p-1 rounded-full hover:bg-gray-100"
         >
           <Bell className="h-5 w-5 text-gray-500" />
-        </button>
+        </button> */}
 
         <div className="flex items-center gap-2">
           <div className="relative h-8 w-8 rounded-full overflow-hidden">
@@ -86,12 +86,12 @@ export default function Navbar() {
 
       {/* Desktop navigation */}
       <div className="hidden md:flex items-center gap-2 sm:gap-6">
-        <button
+        {/* <button
           aria-label="Notifications"
           className="relative p-1 rounded-full hover:bg-gray-100"
         >
           <Bell className="h-5 w-5 text-gray-500" />
-        </button>
+        </button> */}
 
         <div className="relative bg-gray-100 rounded-xl py-2 px-4 flex items-center gap-2">
           <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ export default function Navbar() {
                   href="/settings"
                   className="block text-sm text-secondary font-bold cursor-pointer"
                 >
-                  Forgot Password
+                  Settings
                 </Link>
                 <button
                   onClick={handleLogout}

@@ -401,6 +401,9 @@ export default function SettingsPage() {
         warningText="*This operation cannot be undone"
         confirmText="Delete Account"
         cancelText="Cancel"
+        cancelButtonClass="bg-white border-[#DF1D1D] border-[1px] text-[#DF1D1D] hover:bg-[#DF1D1D] hover:text-white"
+        confirmButtonClass="bg-[#DF1D1D] text-white"
+        
       />
     </div>
   );

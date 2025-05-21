@@ -1,9 +1,11 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 
 import ColourfulBlock from "../ui/ColourfulBlock";
+import ConfirmModal from "../ui/ConfirmModal"; // Import the confirmation modal
 import { getStatusColors } from "@/utils/GetBlockColor";
 import { SupportRequest } from "@/lib/types/SupportRequest";
 import { formatDate, shortenAddress } from "@/utils/functions";
@@ -23,12 +25,27 @@ const SupportRequestTable = ({
   setRequests,
 }: Props) => {
   const tableRef = useRef<HTMLDivElement>(null);
+  // Add state for confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [requestToResolve, setRequestToResolve] = useState<string | null>(null);
 
-  const markResolved = async (requestId: string,status: string) => {
-    
-    
-    
-    if(status.toLowerCase() === "resolved") return;
+  // Handle icon click to show confirmation modal
+  const handleResolveClick = (requestId: string, status: string) => {
+    // if (status.toLowerCase() === "resolved") return;
+    setRequestToResolve(requestId);
+    setShowConfirmModal(true);
+  };
+
+  // Handle confirmation
+  const handleConfirmResolve = async () => {
+    if (!requestToResolve) return;
+
+    await markResolved(requestToResolve);
+    setShowConfirmModal(false);
+    setRequestToResolve(null);
+  };
+
+  const markResolved = async (requestId: string) => {
     try {
       await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}help/support-request/markResolve`,
@@ -59,6 +76,15 @@ const SupportRequestTable = ({
 
   return (
     <div className="flex-1 rounded-lg w-full py-5">
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmResolve}
+        title="Resolve Request"
+        message="Are you sure you want to mark this request as resolved?"
+      />
+
       {/* Table */}
       <div className="rounded-lg overflow-x-auto w-full" ref={tableRef}>
         <table className="w-full text-left table-auto min-w-[800px]">
@@ -120,23 +146,39 @@ const SupportRequestTable = ({
                       className="underline text-primary font-[400] cursor-pointer flex justify-start"
                       onClick={() => onChatClick && onChatClick(supportRequest)}
                     >
-                      {`chat.cashpay/${shortenAddress(
-                        supportRequest._id
-                      )}`}
+                      {`chat.cashpay/${shortenAddress(supportRequest._id)}`}
                     </button>
                   </td>
 
-                  <td className="py-6 px-6 min-w-[60px] text-center ">
+                  {/* Replace checkbox with SVG icon */}
+                  <td className="py-6 px-6 min-w-[60px] text-center">
                     <div className="flex justify-center items-center">
-                      <input
-                        type="checkbox"
-                        id={`resolve-${supportRequest._id}`}
-                        checked={
-                          supportRequest.status.toLowerCase() === "resolved" 
+                      <button
+                        onClick={() =>
+                          handleResolveClick(
+                            supportRequest._id,
+                            supportRequest.status
+                          )
                         }
-                        onChange={() => markResolved(supportRequest._id,supportRequest.status)}
-                        className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                      />
+                        // disabled={supportRequest.status.toLowerCase() === "resolved"}
+                        className={`p-1 rounded-full opacity-100 ${
+                          supportRequest.status.toLowerCase() === "resolved"
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:bg-gray-100 cursor-pointer"
+                        }`}
+                      >
+                        <Image
+                          src="/icons/support_options.svg"
+                          alt="Resolve Request"
+                          width={24}
+                          height={24}
+                          className={
+                            supportRequest.status.toLowerCase() === "resolved"
+                              ? "opacity-50"
+                              : ""
+                          }
+                        />
+                      </button>
                     </div>
                   </td>
                 </tr>
