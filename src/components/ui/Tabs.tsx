@@ -9,9 +9,9 @@ export default function Tabs({ tabs,activeTab, setActiveTab,size }: TabsProps) {
     const getSize = () =>{
         switch (size) {
             case "normal":
-                return "min-[400px]:text-[18px] text-sm"
+                return "min-[400px]:text-[18px] text-sm whitespace-nowrap"
             case "small":
-                return "min-[400px]:text-sm text-xs"
+                return "min-[400px]:text-base text-xs whitespace-nowrap"
             default:
                 return "min-[400px]:text-lg text-md"
         }

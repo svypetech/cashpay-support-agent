@@ -22,6 +22,7 @@ export const formatDate = (dateString: string): string => {
 };
 
 
+
 export function shortenAddress(address: string, chars = 6): string {
   if (!address) return "-";
 

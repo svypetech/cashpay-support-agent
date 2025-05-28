@@ -87,28 +87,28 @@ const SupportRequestTable = ({
 
       {/* Table */}
       <div className="rounded-lg overflow-x-auto w-full" ref={tableRef}>
-        <table className="w-full text-left table-auto min-w-[800px]">
+        <table className="w-full text-left table-auto min-w-[1000px]">
           <thead className="bg-secondary/10">
             <tr className="text-[12px] sm:text-[16px]">
-              <th className="py-4 px-6 text-left font-[700] text-[16px] w-[12%] whitespace-nowrap">
+              <th className="py-4 px-4 text-left font-[700] text-[16px] w-[12%] whitespace-nowrap">
                 {headings[0]}
               </th>
-              <th className="py-4 px-6 text-left font-[700] text-[16px] w-[10%]">
+              <th className="py-4 px-4 text-left font-[700] text-[16px] w-[10%]">
                 {headings[1]}
               </th>
-              <th className="py-4 px-6 text-left font-[700] text-[16px] w-[17%]">
+              <th className="py-4 px-4 text-left font-[700] text-[16px] w-[17%]">
                 {headings[2]}
               </th>
-              <th className="py-4 px-6 text-left font-[700] text-[16px] w-[15%]">
+              <th className="py-4 px-4 text-left font-[700] text-[16px] w-[15%]">
                 {headings[3]}
               </th>
-              <th className="py-4 px-6 text-left font-[700] text-[16px] w-[15%]">
+              <th className="py-4 px-4 text-left font-[700] text-[16px] w-[15%]">
                 {headings[4]}
               </th>
-              <th className="py-4 px-6 text-left font-[700] text-[16px] w-[18%] whitespace-nowrap">
+              <th className="py-4 px-4 text-left font-[700] text-[16px] w-[18%] whitespace-nowrap">
                 {headings[5]}
               </th>
-              <th className="py-4 px-6 text-left font-[700] text-[16px] w-[12%] whitespace-nowrap">
+              <th className="py-4 px-4 text-left font-[700] text-[16px] w-[12%] whitespace-nowrap">
                 {headings[6]}
               </th>
             </tr>
@@ -118,30 +118,31 @@ const SupportRequestTable = ({
               supportRequests.map((supportRequest, index) => (
                 <tr
                   key={index}
-                  className="border-b-[0.5px] border-black/10 text-[12px] sm:text-[16px]"
+                  className="border-b border-gray-200 text-[12px] sm:text-[16px]"
                 >
-                  <td className="py-6 px-6 min-w-[100px] break-words font-[400] text-[#333333]">
+                  <td className="py-3 px-2 sm:px-4 sm:py-4 min-w-[100px] break-words font-[400] text-[#333333]">
                     {shortenAddress(supportRequest._id)}
                   </td>
-                  <td className="py-6 px-6  min-w-[120px] break-words font-[400] whitespace-nowrap">
+                  
+                  <td className="py-3 px-2 sm:px-4 sm:py-4 min-w-[120px] break-words font-[400] whitespace-nowrap">
                     {shortenAddress(supportRequest.userId)}
                   </td>
-                  <td className="py-6 px-6 min-w-[150px] break-words font-[400] text-[#333333] whitespace-nowrap">
+                  <td className="py-3 px-2 sm:px-4 sm:py-4 min-w-[150px] break-words font-[400] text-[#333333] whitespace-nowrap">
                     {supportRequest.issueType}
                   </td>
 
-                  <td className="py-6 px-6 min-w-[100px] text-[#333333]">
+                  <td className="py-3 px-2 sm:px-4 sm:py-4 min-w-[100px] text-[#333333]">
                     <ColourfulBlock
                       className={`${getStatusColors(
                         supportRequest.status.toLowerCase()
-                      )} font-[600] rounded-[12px] py-[8px] relative left-[-12px]`}
+                      )} md:text-md`}
                       text={supportRequest.status}
                     />
                   </td>
-                  <td className="py-6 px-6 min-w-[120px] break-words font-[400] text-[#333333] whitespace-nowrap">
+                  <td className="py-3 px-2 sm:px-4 sm:py-4 min-w-[120px] break-words font-[400] text-[#333333] whitespace-nowrap">
                     {formatDate(supportRequest.updateDate)}
                   </td>
-                  <td className="py-6 px-6 min-w-[100px] text-left whitespace-nowrap">
+                  <td className="py-3 px-2 sm:px-4 sm:py-4 min-w-[100px] text-left whitespace-nowrap">
                     <button
                       className="underline text-primary font-[400] cursor-pointer flex justify-start"
                       onClick={() => onChatClick && onChatClick(supportRequest)}
@@ -151,7 +152,7 @@ const SupportRequestTable = ({
                   </td>
 
                   {/* Replace checkbox with SVG icon */}
-                  <td className="py-6 px-6 min-w-[60px] text-center">
+                  <td className="py-3 px-2 sm:px-4 sm:py-4 min-w-[60px] text-center">
                     <div className="flex justify-center items-center">
                       <button
                         onClick={() =>

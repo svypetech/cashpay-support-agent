@@ -5,7 +5,7 @@ import Image from "next/image";
 interface VerificationStep {
   title: string;
   completed: boolean;
-  active?: boolean;
+  
 }
 
 interface VerificationStepsProps {

@@ -6,7 +6,7 @@ import SupportRequestTable from "@/components/tables/SupportRequestTable";
 import Pagination from "@/components/pagination/pagination";
 import ChatSidebar from "@/components/support/chat/ChatSidebar";
 import { ChatUser } from "@/lib/types/chat";
-
+import Error from "@/components/ui/Error";
 import useSupportRequestData from "@/hooks/useFetchSupportRequestData";
 import { SupportRequest } from "@/lib/types/SupportRequest";
 import SkeletonTableLoader from "@/components/skeletons/SkeletonTableLoader";
@@ -86,7 +86,14 @@ export default function MainSection() {
       </div>
       {isLoading ? (
         <SkeletonTableLoader headings={headings} />
-      ) : (
+      ) :
+      isError ? (
+        <Error text="Something went wrong" />
+      ) :
+      requests.length === 0 ? (
+        <Error text="No data found" />
+      ) :
+      (
         <SupportRequestTable
           headings={headings}
           supportRequests={requests}

@@ -1,23 +1,26 @@
-"use client";
-import "./globals.css";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { AuthenticateUser } from "@/utils/functions";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const router = useRouter();
-  useEffect(() => {
-    if (!AuthenticateUser()) {
-      router.push("/signin");
-    }
-  }, []);
+import type { Metadata } from "next";
+import { Montserrat } from "next/font/google";
+import "./globals.css";
+
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-montserrat",
+});
+
+export const metadata: Metadata = {
+  title: "CashPay - Your Finance Partner",
+  description: "Your Finance Partner is Coming Soon.",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${montserrat.variable} antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }

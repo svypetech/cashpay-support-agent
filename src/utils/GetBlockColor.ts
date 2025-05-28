@@ -3,7 +3,7 @@ export const getStatusColors = (status: string) => {
       case "failed":
         return "bg-[#DF1D1D]/20 text-[#DF1D1D]";
       case "resolved":
-        return "bg-[#71FB55]/20 text-success";
+        return "bg-[#71FB5533] text-[#20C000]";
       case "pending":
         return "bg-yellow-100 text-yellow-600";
       default:
