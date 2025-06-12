@@ -8,6 +8,7 @@ export interface Message {
   message: string;
   date: string;
   __v?: number;
+  showStatus?: boolean; // New property to control status display
 }
 
 export interface ChatUser {

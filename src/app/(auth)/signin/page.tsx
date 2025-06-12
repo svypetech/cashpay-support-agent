@@ -71,7 +71,7 @@ export default function SignIn() {
   };
   useEffect(() => {
     if (AuthenticateUser()) {
-      router.push("/support");
+      router.push("");
     }
   }, []);
   // Check if user is already authenticated

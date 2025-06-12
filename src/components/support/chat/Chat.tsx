@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
@@ -6,16 +8,20 @@ import ChatInput from "./ChatInput";
 import { Message, ChatUser } from "@/lib/types/chat";
 import MessageListSkeleton from "@/components/skeletons/MessageListSkeleton";
 import ChatHeaderSkeleton from "@/components/skeletons/ChatHeaderSkeleton";
+import { useSocket } from "@/hooks/useSocket";
+
 interface ChatProps {
   chatId: string;
   user: ChatUser;
   initialMessages?: Message[];
-
   onClose?: () => void;
   showHeader?: boolean;
   className?: string;
   isLoading?: boolean;
   isError?: string | null;
+  loadMoreMessages?: () => void;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
 }
 
 export default function Chat({
@@ -27,46 +33,244 @@ export default function Chat({
   className,
   isLoading,
   isError,
+  loadMoreMessages = () => {},
+  isLoadingMore = false,
+  hasMore = false,
 }: ChatProps) {
+  const { sendMessage, onNewMessage, isConnected } = useSocket();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const handleSendMessage = (text: string, file?: File) => {
-    // Create new message object
-    const newMessage: Message = {
-      _id: Date.now().toString(),
-      message: text,
-      isRead: false,
-      isReplied: false,
-      senderType: "user",
-      ticketId: chatId,
-      date: new Date().toISOString(),
-      sender: user.userName.firstName,
-      __v: 0,
-    };
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [tempMessages, setTempMessages] = useState<Map<string, Message>>(new Map());
+  const sentMessagesRef = useRef<Set<string>>(new Set());
+  const messageIdsRef = useRef<Set<string>>(new Set());
+  
+  // Initialize messageIdsRef with existing message IDs
+  useEffect(() => {
+    messages.forEach(msg => {
+      if (msg._id && !msg._id.startsWith('temp-')) {
+        messageIdsRef.current.add(msg._id);
+      }
+    });
+  }, []);
+  
+  // Modified cleanup function - simplified logging
+  const cleanupTempMessages = useCallback((newMessage: Message) => {
+    console.log("🔄 CLEANUP - New message received:", newMessage._id, newMessage.message);
+    
+    // LOG: Total messages BEFORE cleanup
+    console.log("📊 BEFORE CLEANUP - Total messages:", messages.length);
+    console.log("📊 BEFORE CLEANUP - Messages array:", messages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
+    
+    setTempMessages(prev => {
+        const updatedTemp = new Map(prev);
+        let foundMatch = false;
+        
+        for (const [tempId, tempMsg] of updatedTemp.entries()) {
+            if (
+                tempMsg.message === newMessage.message || 
+                (Date.now() - new Date(tempMsg.date).getTime() < 10000)
+            ) {
+                updatedTemp.delete(tempId);
+                sentMessagesRef.current.delete(tempId);
+                foundMatch = true;
+                console.log('✅ Removed temp message:', tempId, '-> Replaced with real message:', newMessage._id);
+            }
+        }
+        
+        return updatedTemp;
+    });
 
-    // Add attachment if file is provided
-    if (file) {
-      // newMessage.attachment = {
-      //   name: file.name,
-      //   size: `${new Date().toLocaleDateString("en-US", {
-      //     day: "2-digit",
-      //     month: "short",
-      //     year: "numeric",
-      //   })} • ${Math.round(file.size / 1024)} KB`,
-      //   type: file.type.split("/").pop() || "file",
-      //   url: URL.createObjectURL(file),
-      // };
+    // LOG: Messages AFTER cleanup (this will show in the next render cycle)
+    setTimeout(() => {
+      console.log("📊 AFTER CLEANUP - Total messages:", messages.length);
+      console.log("📊 AFTER CLEANUP - Messages array:", messages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
+    }, 100); // Small delay to ensure state has updated
+  }, [messages, tempMessages]);
+
+  // Listen for new messages coming from the server
+  useEffect(() => {
+    const cleanupListener = onNewMessage((newMessages, isRefetch) => {
+      if (isRefetch) {
+        // LOG: Before refetch
+        console.log("📊 REFETCH BEFORE - Total messages:", messages.length);
+        console.log("📊 REFETCH BEFORE - Messages:", messages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
+        
+        const tempMessagesToKeep: Message[] = [];
+        
+        // Identify which temp messages aren't in the server's response
+        tempMessages.forEach((tempMsg) => {
+          // Check if temp message exists in new messages by content and timestamp
+          const messageExists = newMessages.some(msg => 
+            (msg.message === tempMsg.message && 
+             Math.abs(new Date(msg.date).getTime() - new Date(tempMsg.date).getTime()) < 60000)
+          );
+          
+          if (!messageExists && sentMessagesRef.current.has(tempMsg._id)) {
+            tempMessagesToKeep.push(tempMsg);
+          }
+        });
+
+        // Process newMessages to avoid duplicates
+        const newMessagesToAdd: Message[] = [];
+        
+        newMessages.forEach(newMsg => {
+          // Check if this message is already in our state by ID
+          if (newMsg._id && !messageIdsRef.current.has(newMsg._id)) {
+            newMessagesToAdd.push(newMsg);
+            messageIdsRef.current.add(newMsg._id);
+          }
+        });
+        
+        if (newMessagesToAdd.length > 0 || tempMessagesToKeep.length > 0) {
+          setMessages(prevMessages => {
+            // Create a merged list and sort by date
+            const allMessages = [...prevMessages, ...newMessagesToAdd, ...tempMessagesToKeep];
+            
+            // Remove duplicates with a Map (keeping the non-temp version if both exist)
+            const messagesMap = new Map<string, Message>();
+            
+            // First add all non-temp messages
+            allMessages.forEach(msg => {
+              const key = msg._id;
+              if (key && !key.startsWith('temp-')) {
+                messagesMap.set(key, msg);
+              }
+            });
+            
+            // Then add temp messages only if their real version doesn't exist
+            allMessages.forEach(msg => {
+              const key = msg._id;
+              if (key && key.startsWith('temp-')) {
+                // Check if we have a non-temp message with the same content
+                const hasRealVersion = Array.from(messagesMap.values()).some(
+                  realMsg => realMsg.message === msg.message && 
+                  Math.abs(new Date(realMsg.date).getTime() - new Date(msg.date).getTime()) < 60000
+                );
+                
+                if (!hasRealVersion) {
+                  messagesMap.set(key, msg);
+                }
+              }
+            });
+            
+            // Convert back to array and sort by date
+            return Array.from(messagesMap.values()).sort((a, b) => 
+              new Date(a.date).getTime() - new Date(b.date).getTime()
+            );
+          });
+        }
+        
+        // Update temp messages if needed
+        if (tempMessagesToKeep.length > 0) {
+          const newTempMap = new Map<string, Message>();
+          tempMessagesToKeep.forEach(msg => {
+            newTempMap.set(msg._id, msg);
+          });
+          setTempMessages(newTempMap);
+        } else {
+          setTempMessages(new Map());
+        }
+      } else {
+        // Single new message
+        const newMessage = newMessages[0];
+        
+        // Only process messages for this chat
+        if (newMessage.ticketId === chatId) {
+          // LOG: Before adding single message
+          console.log("📊 SINGLE MESSAGE BEFORE - Total messages:", messages.length);
+          console.log("📊 SINGLE MESSAGE BEFORE - Messages:", messages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
+          
+          // Run cleanup first
+          cleanupTempMessages(newMessage);
+          
+          const messageExists = messages.some(msg => msg._id === newMessage._id);
+          if (!messageExists) {
+            setMessages(prevMessages => {
+              const updatedMessages = [...prevMessages, newMessage];
+              
+              // LOG: After adding single message
+              console.log("📊 SINGLE MESSAGE AFTER - Total messages:", updatedMessages.length);
+              console.log("📊 SINGLE MESSAGE AFTER - Messages:", updatedMessages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
+              
+              // Also log the final state after cleanup has taken effect
+              setTimeout(() => {
+                console.log("📊 FINAL STATE AFTER CLEANUP - Total messages:", updatedMessages.length);
+                console.log("📊 FINAL STATE AFTER CLEANUP - Messages:", updatedMessages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
+              }, 200);
+              
+              return updatedMessages;
+            });
+          }
+        }
+      }
+    });
+    
+    return cleanupListener;
+  }, [chatId, onNewMessage, messages, cleanupTempMessages, tempMessages]);
+  
+  const handleSendMessage = async (text: string, file?: File) => {
+    if (!text.trim()) return;
+    
+    setSendingMessage(true);
+    
+    try {
+      // Current user info from localStorage
+      const userInfo = localStorage.getItem("user");
+      const currentUserId = userInfo ? JSON.parse(userInfo)._id : null;
+      
+      // Send message via Socket.IO
+      const { success, tempId } = await sendMessage(text, chatId);
+      
+      if (success && tempId) {
+        // Create temporary message object for UI display
+        const tempMessage: Message = {
+          _id: tempId, // Temporary ID
+          message: text,
+          isRead: false,
+          isReplied: false,
+          senderType: "support agent", 
+          ticketId: chatId,
+          date: new Date().toISOString(),
+          sender: currentUserId || "agent", // Fallback to "agent" if userId not found
+          __v: 0,
+        };
+        
+        // Track this message as a sent message we should preserve
+        sentMessagesRef.current.add(tempId);
+        
+        // Add to temp messages
+        setTempMessages(prev => new Map(prev).set(tempId, tempMessage));
+        
+        // Add to messages state
+        setMessages(prevMessages => [...prevMessages, tempMessage]);
+        
+        // Handle file attachment if needed
+        if (file) {
+          console.log("File attachment handling needed:", file);
+        }
+      } else {
+        console.error("Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setSendingMessage(false);
     }
-
-    // Update messages state
-    setMessages([...messages, newMessage]);
-
-    // Call parent handler if provided
-    // if (onSendMessage) {
-    // //   sendMessageFunction
-    // }
   };
+
+  // Reset messages when initialMessages changes
   useEffect(() => {
     setMessages(initialMessages);
+    
+    // Reset message IDs tracking
+    messageIdsRef.current = new Set();
+    initialMessages.forEach(msg => {
+      if (msg._id) messageIdsRef.current.add(msg._id);
+    });
+    
+    // Clear all temporary messages and sent tracking when chat changes
+    setTempMessages(new Map());
+    sentMessagesRef.current = new Set();
   }, [initialMessages]);
 
   return (
@@ -81,6 +285,13 @@ export default function Chat({
         showHeader &&
         user.userName != null && <ChatHeader user={user} onClose={onClose} />
       )}
+      
+      {!isConnected && (
+        <div className="bg-yellow-100 text-yellow-800 text-sm p-2 text-center">
+          Connection issue. Messages may not send or receive properly.
+        </div>
+      )}
+      
       {isLoading ? (
         <MessageListSkeleton />
       ) : isError ? (
@@ -89,11 +300,286 @@ export default function Chat({
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <MessageList messages={messages} className={className} />
+          <MessageList 
+            messages={messages} 
+            className={className} 
+            currentUserId={getUserIdFromLocalStorage()} 
+            tempMessageIds={Array.from(tempMessages.keys())}
+            onLoadMore={loadMoreMessages}
+            isLoadingMore={isLoadingMore}
+            hasMore={hasMore}
+          />
         </div>
       )}
 
-      <ChatInput onSendMessage={handleSendMessage} />
+      <ChatInput 
+        onSendMessage={handleSendMessage} 
+        disabled={sendingMessage || !isConnected}
+      />
     </div>
   );
 }
+
+// Helper function to get current user ID
+function getUserIdFromLocalStorage(): string {
+  try {
+    const userInfo = localStorage.getItem("user");
+    if (!userInfo) return "agent"; // Default to "agent" if no user in localStorage
+    const user = JSON.parse(userInfo);
+    return user._id || "agent";
+  } catch (error) {
+    console.error("Error parsing user from localStorage:", error);
+    return "agent";
+  }
+}
+
+// import { useEffect, useState, useRef } from "react";
+
+// import ChatHeader from "./ChatHeader";
+// import MessageList from "./MessageList";
+// import ChatInput from "./ChatInput";
+// import { Message, ChatUser } from "@/lib/types/chat";
+// import MessageListSkeleton from "@/components/skeletons/MessageListSkeleton";
+// import ChatHeaderSkeleton from "@/components/skeletons/ChatHeaderSkeleton";
+// import { useSocket } from "@/hooks/useSocket";
+
+// interface ChatProps {
+//   chatId: string;
+//   user: ChatUser;
+//   initialMessages?: Message[];
+//   onClose?: () => void;
+//   showHeader?: boolean;
+//   className?: string;
+//   isLoading?: boolean;
+//   isError?: string | null;
+//   loadMoreMessages?: () => void;
+//   isLoadingMore?: boolean;
+//   hasMore?: boolean;
+// }
+
+// export default function Chat({
+//   chatId,
+//   user,
+//   initialMessages = [],
+//   onClose,
+//   showHeader = true,
+//   className,
+//   isLoading,
+//   isError,
+//   loadMoreMessages = () => {},
+//   isLoadingMore = false,
+//   hasMore = false,
+// }: ChatProps) {
+//   const { sendMessage, onNewMessage, isConnected } = useSocket();
+//   const [messages, setMessages] = useState<Message[]>(initialMessages);
+//   const [sendingMessage, setSendingMessage] = useState(false);
+//   const [tempMessages, setTempMessages] = useState<Map<string, Message>>(new Map());
+//   const sentMessagesRef = useRef<Set<string>>(new Set());
+  
+//   // Listen for new messages coming from the server
+//   useEffect(() => {
+//     // Set up listener for new messages
+//     const cleanupListener = onNewMessage((newMessages, isRefetch) => {
+//       if (isRefetch) {
+//         // Check if we should preserve our temp messages when receiving a refetch
+//         // (sometimes the server's response doesn't include messages we just sent)
+//         const tempMessagesToKeep: Message[] = [];
+        
+//         // Identify which temp messages aren't in the server's response
+//         tempMessages.forEach((tempMsg) => {
+//           // Check if temp message exists in new messages by content and timestamp
+//           const messageExists = newMessages.some(msg => 
+//             (msg.message === tempMsg.message && 
+//              Math.abs(new Date(msg.date).getTime() - new Date(tempMsg.date).getTime()) < 60000)
+//           );
+          
+//           if (!messageExists && sentMessagesRef.current.has(tempMsg._id)) {
+//             tempMessagesToKeep.push(tempMsg);
+//           }
+//         });
+
+//         // Combine server messages with our temp messages that aren't in the response yet
+//         console.log("NEW MESSAGES: ",newMessages)
+//         console.log("TEMP MESSAGES TO KEEP: ", tempMessagesToKeep);
+//         console.log("CURRENT MESSAGES: ", messages);
+//         // Filter out any messages that are already in the current messages state
+//         setMessages([...messages, ...newMessages[0], ...tempMessagesToKeep]);
+        
+//         // Update temp messages if needed
+//         if (tempMessagesToKeep.length > 0) {
+//           const newTempMap = new Map<string, Message>();
+//           tempMessagesToKeep.forEach(msg => {
+//             newTempMap.set(msg._id, msg);
+//           });
+//           setTempMessages(newTempMap);
+//         } else {
+//           setTempMessages(new Map());
+//         }
+//       } else {
+//         // Single new message
+//         const newMessage = newMessages[0];
+        
+//         // Only process messages for this chat
+//         if (newMessage.ticketId === chatId) {
+//           // Check if we already have this message (by ID or similar content)
+//           const messageExists = messages.some(msg => {
+//             // Check by ID
+//             if (msg._id === newMessage._id) return true;
+            
+//             // Check if it's similar to one of our temp messages (same content, similar time)
+//             if (tempMessages.has(msg._id) && 
+//                 msg.message === newMessage.message &&
+//                 Math.abs(new Date(msg.date).getTime() - new Date(newMessage.date).getTime()) < 60000) {
+              
+//               // Remove the temp message since we got the real one
+//               const updatedTempMessages = new Map(tempMessages);
+//               updatedTempMessages.delete(msg._id);
+//               setTempMessages(updatedTempMessages);
+              
+//               // Also remove from sent messages tracking
+//               sentMessagesRef.current.delete(msg._id);
+              
+//               return true;
+//             }
+            
+//             return false;
+//           });
+          
+//           if (!messageExists) {
+//             // Add to end of array (newest message)
+//             setMessages(prevMessages => [...prevMessages, newMessage]);
+//           } else {
+//             // Replace any temp version with the real message
+//             setMessages(prevMessages => 
+//               prevMessages.map(msg => 
+//                 (msg.message === newMessage.message && 
+//                  Math.abs(new Date(msg.date).getTime() - new Date(newMessage.date).getTime()) < 60000)
+//                   ? newMessage
+//                   : msg
+//               )
+//             );
+//           }
+//         }
+//       }
+//     });
+    
+//     return cleanupListener;
+//   }, [chatId, onNewMessage, messages, tempMessages]);
+  
+//   const handleSendMessage = async (text: string, file?: File) => {
+//     if (!text.trim()) return;
+    
+//     setSendingMessage(true);
+    
+//     try {
+//       // Current user info from localStorage
+//       const userInfo = localStorage.getItem("user");
+//       const currentUserId = userInfo ? JSON.parse(userInfo)._id : null;
+      
+//       // Send message via Socket.IO
+//       const { success, tempId } = await sendMessage(text, chatId);
+      
+//       if (success && tempId) {
+//         // Create temporary message object for UI display
+//         const tempMessage: Message = {
+//           _id: tempId, // Temporary ID
+//           message: text,
+//           isRead: false,
+//           isReplied: false,
+//           senderType: "support agent", 
+//           ticketId: chatId,
+//           date: new Date().toISOString(),
+//           sender: currentUserId || "agent", // Fallback to "agent" if userId not found
+//           __v: 0,
+//         };
+        
+//         // Track this message as a sent message we should preserve
+//         sentMessagesRef.current.add(tempId);
+        
+//         // Add to temp messages
+//         setTempMessages(prev => new Map(prev).set(tempId, tempMessage));
+        
+//         // Add to messages state
+//         setMessages(prevMessages => [...prevMessages, tempMessage]);
+        
+//         // Handle file attachment if needed
+//         if (file) {
+//           console.log("File attachment handling needed:", file);
+//         }
+//       } else {
+//         console.error("Failed to send message");
+//       }
+//     } catch (error) {
+//       console.error("Error sending message:", error);
+//     } finally {
+//       setSendingMessage(false);
+//     }
+//   };
+
+//   // Reset messages when initialMessages changes
+//   useEffect(() => {
+//     setMessages(initialMessages);
+//     // Clear all temporary messages and sent tracking when chat changes
+//     setTempMessages(new Map());
+//     sentMessagesRef.current = new Set();
+//   }, [initialMessages]);
+
+//   return (
+//     <div className={`flex flex-col bg-white h-full font-inter`}>
+//       {isLoading ? (
+//         <ChatHeaderSkeleton />
+//       ) : isError ? (
+//         <div className="flex items-center justify-center h-full">
+//           <p>Error: {isError}</p>
+//         </div>
+//       ) : (
+//         showHeader &&
+//         user.userName != null && <ChatHeader user={user} onClose={onClose} />
+//       )}
+      
+//       {!isConnected && (
+//         <div className="bg-yellow-100 text-yellow-800 text-sm p-2 text-center">
+//           Connection issue. Messages may not send or receive properly.
+//         </div>
+//       )}
+      
+//       {isLoading ? (
+//         <MessageListSkeleton />
+//       ) : isError ? (
+//         <div className="flex items-center justify-center h-full">
+//           <p>Error: {isError}</p>
+//         </div>
+//       ) : (
+//         <div className="flex-1 overflow-y-auto">
+//           <MessageList 
+//             messages={messages} 
+//             className={className} 
+//             currentUserId={getUserIdFromLocalStorage()} 
+//             tempMessageIds={Array.from(tempMessages.keys())}
+//             onLoadMore={loadMoreMessages}
+//             isLoadingMore={isLoadingMore}
+//             hasMore={hasMore}
+//           />
+//         </div>
+//       )}
+
+//       <ChatInput 
+//         onSendMessage={handleSendMessage} 
+//         disabled={sendingMessage || !isConnected}
+//       />
+//     </div>
+//   );
+// }
+
+// // Helper function to get current user ID
+// function getUserIdFromLocalStorage(): string {
+//   try {
+//     const userInfo = localStorage.getItem("user");
+//     if (!userInfo) return "agent"; // Default to "agent" if no user in localStorage
+//     const user = JSON.parse(userInfo);
+//     return user._id || "agent";
+//   } catch (error) {
+//     console.error("Error parsing user from localStorage:", error);
+//     return "agent";
+//   }
+// }

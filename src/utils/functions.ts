@@ -1,3 +1,5 @@
+
+
 export const formatDate = (dateString: string): string => {
   if (!dateString) return "N/A";
 
@@ -55,3 +57,46 @@ export const AuthenticateUser = () => {
     return true;
   }
 };
+
+import { Message } from "@/lib/types/chat";
+
+export function groupMessagesByDate(messages: Message[]): { date: string; messages: Message[] }[] {
+  if (!messages || !messages.length) return [];
+
+  // Sort messages by date (oldest first)
+  const sortedMessages = [...messages].sort((a, b) => {
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
+
+  const groups: { [key: string]: Message[] } = {};
+
+  // Group messages by date
+  sortedMessages.forEach(message => {
+    // Get date part only (YYYY-MM-DD)
+    const date = new Date(message.date).toISOString().split('T')[0];
+    
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    
+    groups[date].push(message);
+  });
+
+  // Convert object to array format, sorted by date (oldest to newest)
+  return Object.keys(groups)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+    .map(date => ({
+      date,
+      messages: groups[date]
+    }));
+}
+
+// Format message time (HH:MM AM/PM)
+export function formatMessageTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (error) {
+    return '';
+  }
+}

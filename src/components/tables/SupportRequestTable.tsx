@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useRef } from "react";
 
 import ColourfulBlock from "../ui/ColourfulBlock";
 import { getStatusColors } from "@/utils/GetBlockColor";
