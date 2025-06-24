@@ -40,7 +40,7 @@ export default function useUser({
         setUsers(response.data.data.users);
         setTotalPages(response.data.data.totalPages);
       } catch (error: any) {
-        alert(JSON.stringify(error.response.data.error));
+        
         setIsError(true);
         setUsers([]);
       } finally {

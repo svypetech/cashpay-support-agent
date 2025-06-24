@@ -12,7 +12,7 @@ import { User } from "@/lib/types/User";
 interface UserProfileSidebarProps {
   showSidebar: boolean;
   onClose: () => void;
-  user: User;
+  user: User | null;
   setData: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
@@ -25,12 +25,13 @@ export default function UserProfileSidebar({
   const [isVisible, setIsVisible] = useState(false);
   const [slideIn, setSlideIn] = useState(false);
   const [verificationStarted, setVerificationStarted] = useState(false);
-  const [steps, setSteps] = useState([
-    { title: "Personal Details", completed: user.KycProfileAdded },
-    { title: "Documents", completed: user.KycIdDocAdded },
-    { title: "Selfie", completed: user.KycSellfieAdded },
-  ]);
   const [isVerifying, setIsVerifying] = useState(false);
+
+  const steps = [
+    { title: "Personal Details", completed: user?.KycProfileAdded || false },
+    { title: "Documents", completed: user?.KycIdDocAdded || false },
+    { title: "Selfie", completed: user?.KycSellfieAdded || false },
+  ];
 
   const handleStartVerification = () => {
     console.log("Starting verification process");
@@ -45,7 +46,7 @@ export default function UserProfileSidebar({
         `${process.env.NEXT_PUBLIC_BACKEND_URL}user/updateKycStatus`,
         {
           status: "Approved",
-          id: user._id,
+          id: user && user._id,
         },
         {
           headers: {
@@ -56,7 +57,7 @@ export default function UserProfileSidebar({
       setIsVerifying(false);
       setData((prevUsers) =>
         prevUsers.map((prevUser) =>
-          prevUser._id === user._id
+          prevUser._id === (user && user._id)
             ? { ...prevUser, verificationStatus: "Approved" }
             : prevUser
         )
@@ -96,7 +97,7 @@ export default function UserProfileSidebar({
     }
   }, [showSidebar]);
 
-  if (!showSidebar && !isVisible) return null;
+  if (!showSidebar && !isVisible && !user) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -143,25 +144,32 @@ export default function UserProfileSidebar({
                 </div>
                 <VerificationAccordion
                   personalDetails={{
-                    name: user.name.firstName + " " + user.name.lastName,
-                    dob: user.DOB,
-                    region: user.region,
+                    name:
+                      (user &&
+                        user.name.firstName + " " + user.name.lastName) ||
+                      "",
+                    dob: (user && user.DOB) || "",
+                    region: (user && user.region) || "",
                   }}
                   document={{
-                    url: user.idDocUrl,
+                    url: (user && user.idDocUrl) || "",
                     fileName:
-                      user.name.firstName +
-                      " " +
-                      user.name.lastName +
-                      " ID.png",
+                      (user &&
+                        user.name.firstName +
+                          " " +
+                          user.name.lastName +
+                          " ID.png") ||
+                      "",
                   }}
                   selfieDocument={{
-                    url: user.selfieUrl,
+                    url: (user && user.selfieUrl) || "",
                     fileName:
-                      user.name.firstName +
-                      " " +
-                      user.name.lastName +
-                      " selfie.png",
+                      (user &&
+                        user.name.firstName +
+                          " " +
+                          user.name.lastName +
+                          " selfie.png") ||
+                      "",
                   }}
                 />
               </div>
@@ -203,10 +211,14 @@ export default function UserProfileSidebar({
               <div className="mb-4 h-32 w-32 overflow-hidden rounded-full flex items-center justify-center">
                 <img
                   src={
-                    user.selfieUrl || "/placeholder.svg?height=200&width=200"
+                    (user && user.selfieUrl) ||
+                    "/placeholder.svg?height=200&width=200"
                   }
                   alt={
-                    user.name && user.name.firstName + " " + user.name.lastName
+                    (user &&
+                      user.name &&
+                      user.name.firstName + " " + user.name.lastName) ||
+                    "User Profile"
                   }
                   className="h-full w-full object-cover"
                 />
@@ -214,9 +226,14 @@ export default function UserProfileSidebar({
               {/* User Info - Centered */}
               <div className="text-center w-full mb-6">
                 <h3 className="mb-1 text-xl font-semibold">
-                  {user.name.firstName + " " + user.name.lastName}
+                  {(user &&
+                    user.name &&
+                    user.name.firstName + " " + user.name.lastName) ||
+                    "User Profile"}
                 </h3>
-                <p className="text-sm text-gray-500">User ID: {user._id}</p>
+                <p className="text-sm text-gray-500">
+                  User ID: {(user && user._id) || "N/A"}
+                </p>
               </div>
 
               {/* User Details - Centered */}
@@ -233,7 +250,8 @@ export default function UserProfileSidebar({
                       />
                       <span className="font-bold">Email</span>
                     </div>
-                    <span className="">{user.email}</span>
+                    <span className="">{(user && user.email) || "N/A"}</span>{" "}
+                    <br />
                   </div>
                 </div>
                 <div className="mb-2 flex w-full items-center">
@@ -248,7 +266,9 @@ export default function UserProfileSidebar({
                       />
                       <span className="font-bold">Joining</span>
                     </div>
-                    <span className="text-sm">{user.date}</span>
+                    <span className="text-sm">
+                      {(user && user.date) || "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -260,12 +280,13 @@ export default function UserProfileSidebar({
                   <h4 className="text-2xl font-semibold text-center">
                     KYC Verification
                   </h4>
-                  {user.verificationStatus.toLowerCase() === "approved" && (
-                    <span className="rounded-xl font-bold px-4 py-2 text bg-[#71FB5533] text-[#20C000]">
-                      Verified
-                    </span>
-                  )}
-                  {user.verificationStatus === "Pending" && (
+                  {user &&
+                    user.verificationStatus.toLowerCase() === "approved" && (
+                      <span className="rounded-xl font-bold px-4 py-2 text bg-[#71FB5533] text-[#20C000]">
+                        Verified
+                      </span>
+                    )}
+                  {user && user.verificationStatus === "Pending" && (
                     <span className="rounded-xl font-bold px-4 py-2 text-[#727272] bg-[#72727233]">
                       Pending
                     </span>
@@ -273,7 +294,7 @@ export default function UserProfileSidebar({
                 </div>
 
                 {/* Verification Badge - Centered */}
-                {user.verificationStatus === "Approved" && (
+                {user && user.verificationStatus === "Approved" && (
                   <div className="mb-12 flex justify-center">
                     <div className="relative">
                       <Image
@@ -295,7 +316,7 @@ export default function UserProfileSidebar({
                 )}
 
                 {/* Verification Steps - Centered */}
-                {user.verificationStatus === "Pending" && (
+                {user && user.verificationStatus === "Pending" && (
                   <div className="w-full flex justify-center">
                     <VerificationSteps
                       steps={steps}

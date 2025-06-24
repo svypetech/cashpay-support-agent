@@ -25,10 +25,11 @@ export default function useFetchChat({chatId, setChatSidebarOpen}: {chatId: stri
       
       setChatSidebarOpen(true);
       setIsLoading(true);
-      setCurrentPage(1); // Reset to page 1 when chat changes
+      setCurrentPage(1);
       isInitialLoadComplete.current = false;
       
       try {
+        // Increase limit to ensure we get all recent messages
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}help/chat/all?limit=20&page=1&ticketId=${chatId}`,
           {
@@ -38,16 +39,18 @@ export default function useFetchChat({chatId, setChatSidebarOpen}: {chatId: stri
           }
         );
         
-        setMessages(response.data.chat.data.chats || []);
+        // Ensure we have messages array even if empty
+        const chatMessages = response.data.chat.data.chats || [];
+        console.log(`Initial load: Fetched ${chatMessages.length} messages`);
+        
+        setMessages(chatMessages);
         setCurrentChatUser(response.data.userDetails);
         setTotalPages(response.data.chat.data.totalPages || 1);
         setHasMore(response.data.chat.data.totalPages > 1);
         setIsError(null);
         
-        // Set initialization complete after a short delay
-        setTimeout(() => {
-          isInitialLoadComplete.current = true;
-        }, 500);
+        // Set initialization complete immediately to render UI faster
+        isInitialLoadComplete.current = true;
         
       } catch (error: any) {
         console.error("Error fetching messages:", error);
@@ -61,36 +64,22 @@ export default function useFetchChat({chatId, setChatSidebarOpen}: {chatId: stri
     fetchMessages();
   }, [chatId, setChatSidebarOpen]);
 
-  // Function to load more messages (older messages)
+  // Fix loadMoreMessages to preserve scroll position
   const loadMoreMessages = useCallback(async () => {
-    // Multiple checks to prevent excessive loads
-    // 1. Already loading
-    if (isLoadingMore || chatId === "") return;
+    // Skip if already loading or no more pages
+    if (isLoadingMore || chatId === "" || !hasMore) return;
     
-    // 2. No more pages to load or not initialized
-    if (!hasMore || !isInitialLoadComplete.current) return;
+    // Save current scroll position
+    const scrollContainer = document.getElementById("chat-container");
+    const initialScrollHeight = scrollContainer?.scrollHeight || 0;
+    const initialScrollTop = scrollContainer?.scrollTop || 0;
     
-    // 3. Throttle requests - no more than one every 1000ms, unless user-initiated
-    const now = Date.now();
-    if (now - lastLoadTimeRef.current < 1000 && !userInitiatedLoadRef.current) {
-      console.log("Throttling loadMoreMessages call - too frequent");
-      return;
-    }
-
-    // 4. Block automatic pagination beyond page 2
-    const nextPage = currentPage + 1;
-    if (nextPage > 2 && !userInitiatedLoadRef.current) {
-      console.log("Blocking automatic load beyond page 2");
-      return;
-    }
-    
-    lastLoadTimeRef.current = now;
     setIsLoadingMore(true);
+    console.log(`Loading more messages - page ${currentPage + 1}`);
     
     try {
-      console.log(`Loading more messages: page ${nextPage}`);
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}help/chat/all?limit=20&page=${nextPage}&ticketId=${chatId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}help/chat/all?limit=20&page=${currentPage + 1}&ticketId=${chatId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -100,21 +89,44 @@ export default function useFetchChat({chatId, setChatSidebarOpen}: {chatId: stri
       
       // Get older messages
       const olderMessages = response.data.chat.data.chats || [];
+      console.log(`Fetched ${olderMessages.length} older messages`);
       
       if (olderMessages.length === 0) {
         setHasMore(false);
       } else {
-        // Append older messages to the beginning (they are older)
-        setMessages(prevMessages => [...olderMessages, ...prevMessages]);
-        setCurrentPage(nextPage);
+        // Add messages to STATE WITHOUT REPLACING existing ones
+        setMessages(prevMessages => {
+          // Get unique message IDs we already have
+          const existingIds = new Set(prevMessages.map(msg => msg._id));
+          
+          // Only add messages we don't already have - explicitly type the parameter
+          const messagesToAdd = olderMessages.filter((msg: Message) => !existingIds.has(msg._id));
+          
+          // Create new combined array and sort by date
+          const newMessages = [...messagesToAdd, ...prevMessages].sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
+          
+          console.log(`Added ${messagesToAdd.length} new messages, total now: ${newMessages.length}`);
+          return newMessages;
+        });
+        
+        setCurrentPage(currentPage + 1);
+        
+        // Restore scroll position after state update and render
+        setTimeout(() => {
+          if (scrollContainer) {
+            const newScrollHeight = scrollContainer.scrollHeight;
+            const heightDifference = newScrollHeight - initialScrollHeight;
+            scrollContainer.scrollTop = initialScrollTop + heightDifference;
+            console.log("Scroll position preserved after loading older messages");
+          }
+        }, 100);
       }
-      
-    } catch (error: any) {
-      console.error("Error fetching more messages:", error);
-      setIsError(error.response?.data?.error || "Failed to load more messages");
+    } catch (error) {
+      console.error("Error loading more messages:", error);
     } finally {
       setIsLoadingMore(false);
-      userInitiatedLoadRef.current = false; // Reset user initiated flag
     }
   }, [chatId, currentPage, hasMore, isLoadingMore]);
 

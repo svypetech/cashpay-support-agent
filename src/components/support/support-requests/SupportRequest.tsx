@@ -123,7 +123,7 @@ import SupportRequestTable from "@/components/tables/SupportRequestTable";
 import Pagination from "@/components/pagination/pagination";
 import ChatSidebar from "@/components/support/chat/ChatSidebar";
 import { ChatUser } from "@/lib/types/chat";
-
+import Error from "@/components/ui/Error";
 import useSupportRequestData from "@/hooks/useFetchSupportRequestData";
 import { SupportRequest } from "@/lib/types/SupportRequest";
 import SkeletonTableLoader from "@/components/skeletons/SkeletonTableLoader";
@@ -193,10 +193,10 @@ export default function MainSection() {
 
   return (
     <div className="flex flex-col gap-4 relative">
-      <div className="flex flex-col gap-4 sm:flex-row sm:gap-10">
-        <Search className="sm:w-[70%] w-full" onSearch={setSearchQuery} />
+      <div className="flex flex-col gap-4 sm:gap-[28px] sm:flex-row">
+        <Search className="sm:w-[80%] w-full" onSearch={setSearchQuery} />
         <Sort
-          className="sm:w-[30%] w-full"
+          className="sm:w-[20%] w-full"
           title="Sort"
           options={sortOptions}
           onSort={setSortBy}
@@ -204,7 +204,14 @@ export default function MainSection() {
       </div>
       {isLoading ? (
         <SkeletonTableLoader headings={headings} />
-      ) : (
+      ) :
+      isError ? (
+        <Error text="Something went wrong" />
+      ) :
+      requests.length === 0 ? (
+        <Error text="No data found" />
+      ) :
+      (
         <SupportRequestTable
           headings={headings}
           supportRequests={requests}

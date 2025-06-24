@@ -25,7 +25,7 @@ export default function Footer() {
   ]
 
   return (
-    <footer className="fixed bottom-1 flex justify-center items-center w-full p-2 pb-8">
+    <footer className="fixed bottom-0 flex justify-center items-center w-full p-2 pb-8 z-10 pointer-events-none">
       <div className="flex justify-between items-center bg-white rounded-2xl border-[1px] border-[#0000001A]  w-full max-w-[600px] p-5">
         {navigation.map((item) => {
             const isActive = pathname === item.href

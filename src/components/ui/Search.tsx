@@ -10,7 +10,7 @@ export default function Search({className,onSearch}:{className:string,onSearch:(
                 className={`w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-primary focus:border-transparent`}
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <img src="/icons/search.svg" alt="Search"  className="min-[400px]:w-[24px] min-[400px]:h-[24px] w-[10px] h-[10px]"/>
+                <img src="/icons/search.svg" alt="Search"  className="min-[400px]:w-[24px] min-[400px]:h-[24px] w-[15px] h-[15px]"/>
               </div>
             </div>
 

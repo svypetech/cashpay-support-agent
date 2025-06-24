@@ -46,7 +46,7 @@ export default function useSupportRequestData({
         setData(response.data.requests.requests);
         setTotalPages(response.data.requests.totalPages);
       } catch (error: any) {
-        alert(JSON.stringify(error.response.data.error));
+        
         setIsError(true);
         setData([]);
       } finally {

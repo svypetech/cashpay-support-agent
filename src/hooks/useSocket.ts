@@ -91,21 +91,27 @@ export const useSocket = () => {
         
         // Listen for ticketChat events which contain chat history updates
         socketRef.current.on('ticketChat', (data) => {
-            // Don't ignore completely, but handle differently when we just sent a message
             if (data && data.success && data.data && data.data.chats && data.data.chats.length > 0) {
-                // Extract just the newest message if we recently sent a message
+                console.log(`Received ticketChat with ${data.data.chats.length} messages`);
+                
+                // If we just sent a message, this is likely a message confirmation - don't replace entire history
                 if (recentlySentRef.current) {
-                    console.log('Processing ticketChat carefully after sending message');
+                    console.log('Processing ticketChat as single message (sent recently)');
                     
-                    // Find the last message in the array (should be our just-sent message)
+                    // Just extract the newest message that's likely our just-sent message
                     const newestMessage = data.data.chats[data.data.chats.length - 1];
-                    
-                    // Only pass the newest message, not the whole chat history
                     if (newestMessage) {
-                        callback([newestMessage], false); // Process as a single message, not refetch
+                        callback([newestMessage], false); // Process as single message, not refetch
                     }
-                } else {
-                    // Normal processing for regular updates
+                } 
+                // Otherwise, check if this is a partial update with only new messages
+                else if (data.data.chats.length < 5) {
+                    console.log('Small batch of messages - likely new messages only');
+                    callback(data.data.chats, false); // Process as new individual messages
+                }
+                // For full chat refreshes, properly mark as refetch
+                else {
+                    console.log('Full chat history refresh');
                     callback(data.data.chats, true);
                 }
             }

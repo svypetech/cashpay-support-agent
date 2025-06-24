@@ -176,7 +176,6 @@ export default function ChangePasswordPage() {
         onConfirm={handleConfirmChange}
         isLoading={isSubmitting}
         confirmButtonClass="flex-1 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-blue-900 flex items-center justify-center cursor-pointer"
-        //primary color button
         cancelButtonClass="flex-1 py-2 rounded-lg border-[1px] border-primary text-primary font-semibold cursor-pointer flex items-center justify-center"
       />
     </div>

@@ -90,123 +90,54 @@ export default function Chat({
   // Listen for new messages coming from the server
   useEffect(() => {
     const cleanupListener = onNewMessage((newMessages, isRefetch) => {
+      // Log indicator of what we're processing
+      console.log(`Processing ${isRefetch ? 'REFETCH' : 'NEW MESSAGE'} with ${newMessages.length} messages`);
+      
       if (isRefetch) {
-        // LOG: Before refetch
-        console.log("📊 REFETCH BEFORE - Total messages:", messages.length);
-        console.log("📊 REFETCH BEFORE - Messages:", messages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
+        // Handle full chat history updates - more careful merge
+        const knownMessageIds = new Set(messages.map(msg => msg._id));
+        const trulyNewMessages = newMessages.filter(msg => !knownMessageIds.has(msg._id));
         
-        const tempMessagesToKeep: Message[] = [];
+        console.log(`Found ${trulyNewMessages.length} truly new messages out of ${newMessages.length}`);
         
-        // Identify which temp messages aren't in the server's response
-        tempMessages.forEach((tempMsg) => {
-          // Check if temp message exists in new messages by content and timestamp
-          const messageExists = newMessages.some(msg => 
-            (msg.message === tempMsg.message && 
-             Math.abs(new Date(msg.date).getTime() - new Date(tempMsg.date).getTime()) < 60000)
-          );
-          
-          if (!messageExists && sentMessagesRef.current.has(tempMsg._id)) {
-            tempMessagesToKeep.push(tempMsg);
-          }
-        });
-
-        // Process newMessages to avoid duplicates
-        const newMessagesToAdd: Message[] = [];
-        
-        newMessages.forEach(newMsg => {
-          // Check if this message is already in our state by ID
-          if (newMsg._id && !messageIdsRef.current.has(newMsg._id)) {
-            newMessagesToAdd.push(newMsg);
-            messageIdsRef.current.add(newMsg._id);
-          }
-        });
-        
-        if (newMessagesToAdd.length > 0 || tempMessagesToKeep.length > 0) {
+        if (trulyNewMessages.length > 0) {
           setMessages(prevMessages => {
-            // Create a merged list and sort by date
-            const allMessages = [...prevMessages, ...newMessagesToAdd, ...tempMessagesToKeep];
+            // Create a merged set of messages, ensuring no duplicates
+            const combinedMessages = [...prevMessages];
             
-            // Remove duplicates with a Map (keeping the non-temp version if both exist)
-            const messagesMap = new Map<string, Message>();
-            
-            // First add all non-temp messages
-            allMessages.forEach(msg => {
-              const key = msg._id;
-              if (key && !key.startsWith('temp-')) {
-                messagesMap.set(key, msg);
+            // Add only messages we don't already have
+            trulyNewMessages.forEach(newMsg => {
+              if (!combinedMessages.some(msg => msg._id === newMsg._id)) {
+                combinedMessages.push(newMsg);
               }
             });
             
-            // Then add temp messages only if their real version doesn't exist
-            allMessages.forEach(msg => {
-              const key = msg._id;
-              if (key && key.startsWith('temp-')) {
-                // Check if we have a non-temp message with the same content
-                const hasRealVersion = Array.from(messagesMap.values()).some(
-                  realMsg => realMsg.message === msg.message && 
-                  Math.abs(new Date(realMsg.date).getTime() - new Date(msg.date).getTime()) < 60000
-                );
-                
-                if (!hasRealVersion) {
-                  messagesMap.set(key, msg);
-                }
-              }
-            });
-            
-            // Convert back to array and sort by date
-            return Array.from(messagesMap.values()).sort((a, b) => 
+            // Sort by date
+            return combinedMessages.sort((a, b) => 
               new Date(a.date).getTime() - new Date(b.date).getTime()
             );
           });
         }
-        
-        // Update temp messages if needed
-        if (tempMessagesToKeep.length > 0) {
-          const newTempMap = new Map<string, Message>();
-          tempMessagesToKeep.forEach(msg => {
-            newTempMap.set(msg._id, msg);
-          });
-          setTempMessages(newTempMap);
-        } else {
-          setTempMessages(new Map());
-        }
       } else {
-        // Single new message
+        // Individual new message handling (with cleanup)
         const newMessage = newMessages[0];
         
         // Only process messages for this chat
-        if (newMessage.ticketId === chatId) {
-          // LOG: Before adding single message
-          console.log("📊 SINGLE MESSAGE BEFORE - Total messages:", messages.length);
-          console.log("📊 SINGLE MESSAGE BEFORE - Messages:", messages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
-          
-          // Run cleanup first
+        if (newMessage && newMessage.ticketId === chatId) {
+          // Clean up any temporary versions of this message
           cleanupTempMessages(newMessage);
           
+          // Only add if we don't already have it
           const messageExists = messages.some(msg => msg._id === newMessage._id);
           if (!messageExists) {
-            setMessages(prevMessages => {
-              const updatedMessages = [...prevMessages, newMessage];
-              
-              // LOG: After adding single message
-              console.log("📊 SINGLE MESSAGE AFTER - Total messages:", updatedMessages.length);
-              console.log("📊 SINGLE MESSAGE AFTER - Messages:", updatedMessages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
-              
-              // Also log the final state after cleanup has taken effect
-              setTimeout(() => {
-                console.log("📊 FINAL STATE AFTER CLEANUP - Total messages:", updatedMessages.length);
-                console.log("📊 FINAL STATE AFTER CLEANUP - Messages:", updatedMessages.map(m => ({id: m._id, content: m.message.substring(0, 30)})));
-              }, 200);
-              
-              return updatedMessages;
-            });
+            setMessages(prevMessages => [...prevMessages, newMessage]);
           }
         }
       }
     });
     
     return cleanupListener;
-  }, [chatId, onNewMessage, messages, cleanupTempMessages, tempMessages]);
+  }, [chatId, onNewMessage, messages, cleanupTempMessages]);
   
   const handleSendMessage = async (text: string, file?: File) => {
     if (!text.trim()) return;
@@ -238,10 +169,10 @@ export default function Chat({
         // Track this message as a sent message we should preserve
         sentMessagesRef.current.add(tempId);
         
-        // Add to temp messages
+        // Add to temp messages Map
         setTempMessages(prev => new Map(prev).set(tempId, tempMessage));
         
-        // Add to messages state
+        // ONLY add to messages state - don't duplicate
         setMessages(prevMessages => [...prevMessages, tempMessage]);
         
         // Handle file attachment if needed
@@ -283,7 +214,7 @@ export default function Chat({
         </div>
       ) : (
         showHeader &&
-        user.userName != null && <ChatHeader user={user} onClose={onClose} />
+        <ChatHeader user={user} onClose={onClose} />
       )}
       
       {!isConnected && (
