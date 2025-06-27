@@ -143,7 +143,7 @@ export default function MessageItem({
         </div>
       </div>
       
-      {/* Read indicator for sent messages - only show for messages with showStatus=true */}
+      {/* Read indicator for sent messages - only show for confirmed messages (not temp) */}
       {isFromCurrentUser && !isTemp && showStatus && (
         <p className="text-[10px] text-primary text-end mr-2">
           {message.isRead ? "seen" : "sent"}
