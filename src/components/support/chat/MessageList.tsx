@@ -148,47 +148,54 @@ export default function MessageList({
             flexDirection: 'column-reverse' // This makes infinite scroll work from top
           }}
         >
-          <InfiniteScroll
-            dataLength={messages.length}
-            next={onLoadMore}
-            hasMore={hasMore}
-            loader={
-              <div className="flex justify-center py-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+          {/* Show empty state when there are no messages */}
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full py-8">
+              <div className="bg-gray-100 rounded-full p-4">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="#9CA3AF"/>
+                  <path d="M12 9H14V11H12V9Z" fill="#9CA3AF"/>
+                  <path d="M10 9H12V11H10V9Z" fill="#9CA3AF"/>
+                  <path d="M14 7H16V9H14V7Z" fill="#9CA3AF"/>
+                </svg>
               </div>
-            }
-            scrollableTarget="scrollableDiv"
-            inverse={true} // Load more at the top
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column-reverse',
-              padding: '16px'
-            }}
-          >
-            {/* Show empty state when there are no messages */}
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full py-8">
-                <div className="bg-gray-100 rounded-full p-4">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z" fill="#9CA3AF"/>
-                    <path d="M12 9H14V11H12V9Z" fill="#9CA3AF"/>
-                    <path d="M10 9H12V11H10V9Z" fill="#9CA3AF"/>
-                    <path d="M14 7H16V9H14V7Z" fill="#9CA3AF"/>
-                  </svg>
+              <p className="mt-2 text-gray-500">No messages yet</p>
+              <p className="text-gray-400 text-sm">Start the conversation by sending a message</p>
+            </div>
+          ) : (
+            <InfiniteScroll
+              dataLength={messages.length}
+              next={onLoadMore}
+              hasMore={hasMore && messages.length > 0} // Only show hasMore if we have messages
+              loader={
+                <div className="flex justify-center py-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
                 </div>
-                <p className="mt-2 text-gray-500">No messages yet</p>
-                <p className="text-gray-400 text-sm">Start the conversation by sending a message</p>
-              </div>
-            ) : (
-              // Display messages in date groups (reversed for column-reverse)
-              messageGroups.slice().reverse().map((group, groupIndex, array) => (
+              }
+              scrollableTarget="scrollableDiv"
+              inverse={true} // Load more at the top
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column-reverse',
+                padding: '16px 16px 8px 16px' // Reduced bottom padding
+              }}
+            >
+              {/* Display messages in date groups (reversed for column-reverse) */}
+              {messageGroups.slice().reverse().map((group, groupIndex, array) => (
                 <div 
                   key={groupIndex} 
-                  className={groupIndex === array.length - 1 ? "" : "mb-6"}
+                  className={groupIndex === 0 ? "mb-2" : "mb-6"} // Less margin for last group (first in reverse)
                   style={{ display: 'flex', flexDirection: 'column-reverse' }}
                 >
                   {/* Messages for this date group (reversed) */}
-                  <div className="space-y-3 mb-2" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
+                  <div 
+                    className="mb-2" 
+                    style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column-reverse',
+                      gap: '12px' // Consistent spacing between messages
+                    }}
+                  >
                     {group.messages.slice().reverse().map((message, index) => {
                       // Only consider a message temporary if its ID is actually in the tempMessageIds array
                       // AND it still has a temp- prefix
@@ -216,9 +223,9 @@ export default function MessageList({
                     <div className="h-[1px] bg-primary7 flex-grow"></div>
                   </div>
                 </div>
-              ))
-            )}
-          </InfiniteScroll>
+              ))}
+            </InfiniteScroll>
+          )}
         </div>
       </ScrollToBottom>
     </div>
