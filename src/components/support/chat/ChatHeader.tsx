@@ -1,7 +1,6 @@
-import Image from "next/image";
 
 import { ChatUser } from "@/lib/types/chat";
-
+import Image from "next/image";
 
 interface ChatHeaderProps {
   user: ChatUser;
@@ -22,29 +21,27 @@ export default function ChatHeader({
         <div className="flex items-center gap-3">
           <div className="relative">
             {/* User avatar */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-pink-800">
-              {(
-                <Image
-                  src={user.userImage? user.userImage : "/images/blank-profile.webp"}
-                  alt={'User Avatar'}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
-                  // unoptimized={user.userImage.includes("svg")}
-                />
-              )}
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
+              <Image
+                src={user.userImage ? user.userImage : "/images/blank-profile.webp"}
+                alt={'User Avatar'}
+                width={40}
+                height={40}
+                className="w-full h-full object-cover rounded-full"
+                unoptimized={user.userImage?.includes("svg")}
+              />
             </div>
 
             {/* Status indicator dot */}
             <div
-              className={`absolute top-0 left-0 w-3 h-3 rounded-full border-2 border-white ${
+              className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
                 isOnline ? "bg-success" : "bg-gray-400"
               }`}
             ></div>
           </div>
           <div>
             <h3 className="font-semibold font-inter">
-              {user.userName ? user.userName.firstName + " " + user.userName.lastName : "N/A"}
+              {user.userName ? user.userName.firstName + " " + user.userName.lastName : user.email ? user.email : "N/A"}
             </h3>
             {/* <p className="text-sm text-gray-500 font-inter">{user.userDetails}</p> */}
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
+// import Footer from "@/components/layout/Footer";
 
 export default function ClientLayout({
   children,
@@ -19,7 +19,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     >
       <Header />
       <main className="flex-grow pb-[140px]">{children}</main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

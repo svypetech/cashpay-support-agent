@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState, useRef } from "react";
-import UserProfileSidebar from "../users/UserInfoSidebar";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import ColourfulBlock from "../ui/ColourfulBlock";
+import ConfirmModal from "../ui/ConfirmModal";
 import { User } from "@/lib/types/User";
-import { shortenAddress } from "@/utils/functions";
+import ExpandableId from "../ui/ExpandableId";
+import UserProfileSidebar from "../users/UserInfoSidebar";
 
 interface Props {
   headings: string[];
@@ -33,40 +34,18 @@ function formatDate(dateString: string): string {
     return "Invalid date format";
   }
 }
-const sampleUser: User = {
-  _id: "1234567890abcdef",
-  name: { firstName: "John", lastName: "Doe" },
-  email: "john.doe@example.com",
-  verificationStatus: "Approved",
-  date: "2023-10-01T12:00:00Z",
-  KycProfileAdded: true,
-  KycIdDocAdded: true,
-  KycSellfieAdded: true,
-  selfieUrl: "/path/to/selfie.jpg",
-  idDocUrl: "/path/to/id-doc.jpg",
-  DOB: "1990-01-01",
-  userStatus: "Active",
-  region: "USA",
-  suspendDate: "2023-10-01T12:00:00Z",
-  lastActivity: "2023-10-01T12:00:00Z",
-  updateDate: "2023-10-01T12:00:00Z",
-  lastLoginDate: "2023-10-01T12:00:00Z",
-  totalLogin: 10,
-  averageTime: 30,
-  loginFrequency: 5,
-  sessionDuration: 60,
-  totalTime: 300,
-};
 
 const UserTable: React.FC<Props> = ({ data, headings, setData }) => {
+  const [success, setSuccess] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const [showUserSidebar, setShowUserSidebar] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const tableRef = useRef<HTMLDivElement>(null);
-  const dropdownRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User>({} as User);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
+  // Simple dropdown logic: close on outside click
   useEffect(() => {
-    // Close dropdown when clicking outside
+    console.log("length: ", data.length);
+    console.log("index:", selectedIndex);
     const handleClickOutside = (event: MouseEvent) => {
       if (activeDropdown !== null) {
         const target = event.target as HTMLElement;
@@ -82,40 +61,6 @@ const UserTable: React.FC<Props> = ({ data, headings, setData }) => {
     };
   }, [activeDropdown]);
 
-  useEffect(() => {
-    // Adjust dropdown position for the last few rows
-    if (
-      activeDropdown !== null &&
-      tableRef.current &&
-      dropdownRefs.current[activeDropdown]
-    ) {
-      const tableRect = tableRef.current.getBoundingClientRect();
-      const dropdownRect =
-        dropdownRefs.current[activeDropdown]!.getBoundingClientRect();
-      const rowElement = dropdownRefs.current[activeDropdown]!.closest("tr");
-      const rowRect = rowElement?.getBoundingClientRect();
-
-      if (rowRect && dropdownRect) {
-        const spaceBelow = tableRect.bottom - rowRect.bottom;
-        const dropdownHeight = dropdownRect.height;
-
-        // If there's not enough space below, open the dropdown upwards
-        if (spaceBelow < dropdownHeight) {
-          dropdownRefs.current[activeDropdown]!.style.bottom = "100%";
-          dropdownRefs.current[activeDropdown]!.style.top = "auto";
-          dropdownRefs.current[activeDropdown]!.style.marginBottom = "8px";
-          dropdownRefs.current[activeDropdown]!.style.marginTop = "0";
-        } else {
-          // Otherwise, open downwards (default)
-          dropdownRefs.current[activeDropdown]!.style.top = "100%";
-          dropdownRefs.current[activeDropdown]!.style.bottom = "auto";
-          dropdownRefs.current[activeDropdown]!.style.marginTop = "8px";
-          dropdownRefs.current[activeDropdown]!.style.marginBottom = "0";
-        }
-      }
-    }
-  }, [activeDropdown]);
-
   const toggleDropdown = (index: number) => {
     setActiveDropdown(activeDropdown === index ? null : index);
   };
@@ -126,30 +71,36 @@ const UserTable: React.FC<Props> = ({ data, headings, setData }) => {
     setActiveDropdown(null);
   };
 
+  const needsPadding =
+    activeDropdown !== null &&
+    (selectedIndex >= data.length - 2 || // Last two rows
+      data.length <= 2); // If there are 2 or fewer rows, always add padding
+
   return (
     <div className="flex-1 rounded-lg w-full py-5">
-      {/* Table */}
-      <div className="rounded-lg overflow-x-auto w-full" ref={tableRef}>
-        <table className="w-full text-left min-w-[1000px]">
+      {/* Table - Add padding bottom for dropdown space */}
+      <div
+        className={`rounded-lg overflow-x-auto w-full ${
+          needsPadding ? "pb-24" : ""
+        } `}
+      >
+        <table className="w-full text-left table-auto min-w-[700px]">
           <thead className="bg-secondary/10">
             <tr className="font-satoshi text-[12px] sm:text-[16px] whitespace-nowrap">
-              <th className="p-4 sm:p-4 text-left font-[700] w-[10%]">
+              <th className="p-2 sm:p-5 text-left font-[700] w-[12%]">
                 {headings[0]}
               </th>
-              <th className="p-4 sm:p-4 text-left font-[700] w-[15%]">
+              <th className="p-2 sm:p-5 text-left font-[700] w-[15%]">
                 {headings[1]}
               </th>
-              <th className="p-4 sm:p-4 text-left font-[700] w-[18%]">
+              <th className="p-2 sm:p-5 text-left font-[700] w-[23%]">
                 {headings[2]}
               </th>
-              <th className="p-4 sm:p-4 text-left font-[700] w-[22%]">
+              <th className="p-2 sm:p-5 text-left font-[700] w-[20%]">
                 {headings[3]}
               </th>
-              <th className="p-4 sm:p-4 text-left font-[700] w-[25%]">
+              <th className="p-2 sm:p-5 text-center font-[700] w-[10%]">
                 {headings[4]}
-              </th>
-              <th className="p-4 sm:p-4 text-left font-[700] w-[10%]">
-                {headings[5]}
               </th>
             </tr>
           </thead>
@@ -160,57 +111,43 @@ const UserTable: React.FC<Props> = ({ data, headings, setData }) => {
                   key={index}
                   className="border-b border-gray-200 text-[12px] sm:text-[16px]"
                 >
-                  <td className="px-2 sm:px-4 py-3  sm:py-4 font-satoshi whitespace-nowrap">
-                    {shortenAddress(user._id)}
+                  <td className="p-2 sm:p-5 font-satoshi min-w-[100px] break-words whitespace-nowrap">
+                    <ExpandableId id={user._id} />
                   </td>
-                  <td className="px-2 sm:px-4 py-3 sm:py-4 font-satoshi font-bold text-primary whitespace-nowrap">
+                  <td className="p-2 sm:p-5 font-satoshi font-bold text-primary min-w-[120px] break-words whitespace-nowrap">
                     {user.name
                       ? user.name?.firstName + " " + user.name?.lastName
                       : "N/A"}
                   </td>
-
-                  <td className="px-2 sm:px-4 py-3 sm:py-4 font-satoshi whitespace-nowrap overflow-hidden text-ellipsis">
+                  <td className="p-2 sm:p-5 font-satoshi min-w-[150px] break-words whitespace-nowrap">
                     {user.email ? user.email : "N/A"}
                   </td>
-                  <td className="px-2 sm:px-4 py-3 sm:py-4 font-satoshi whitespace-nowrap">
+                  <td className="p-2 sm:p-5 font-satoshi min-w-[100px] whitespace-nowrap">
                     {formatDate(user.date)}
                   </td>
-                  <td className="px-2 sm:px-4 py-3 sm:py-4 font-satoshi">
-                    <ColourfulBlock
-                      text={
-                        user.verificationStatus === "new"
-                          ? "Pending"
-                          : user.verificationStatus
-                      }
-                      className={`text-center rounded-xl md:text-md font-semibold ${
-                        user.verificationStatus === "Approved"
-                          ? "bg-[#71FB5533] text-[#20C000]"
-                          : "text-[#727272] bg-[#72727233]"
-                      }`}
-                    />
-                  </td>
-                  <td className="relative px-2 sm:px-4 py-3 sm:py-4 font-satoshi text-center">
-                    <div className="dropdown-container relative">
+                  <td className="relative p-2 sm:p-5 font-satoshi min-w-[60px] text-center">
+                    <div className="dropdown-container relative inline-block">
+                      {/* ✅ Centered options button with better styling */}
                       <button
-                        className="absolute right-6 md:relative md:right-auto cursor-pointer "
-                        onClick={() => toggleDropdown(index)}
+                        className="relative cursor-pointer p-2 rounded-full transition-colors duration-200 flex items-center justify-center"
+                        onClick={() => {
+                          setSelectedIndex(index);
+                          toggleDropdown(index);
+                        }}
+                        aria-label="Options menu"
                       >
                         <Image
                           src="/icons/options.svg"
                           alt="Options"
-                          width={24}
-                          height={24}
-                          className="w-4 h-4 min-[1400px]:relative min-[1400px]:right-[25px]"
+                          width={20}
+                          height={20}
+                          className="w-5 h-5"
                         />
                       </button>
 
+                      {/* ✅ Better positioned dropdown */}
                       {activeDropdown === index && (
-                        <div
-                          className="absolute z-10 right-0 w-40 bg-white rounded-md shadow-lg py-1 border border-gray-100"
-                          ref={(el) => {
-                            dropdownRefs.current[index] = el;
-                          }}
-                        >
+                        <div className="absolute z-10 top-full mt-2 w-40 bg-white rounded-md shadow-lg py-1 border border-gray-100 right-0 lg:right-auto lg:left-1/2 lg:-translate-x-1/2">
                           <button
                             className="block w-full text-left px-4 py-2 text-sm text-primary font-bold cursor-pointer hover:bg-gray-50"
                             onClick={() => handleViewUser(user)}
@@ -225,24 +162,23 @@ const UserTable: React.FC<Props> = ({ data, headings, setData }) => {
               ))}
           </tbody>
         </table>
+      </div>
 
+      {/* User Profile Sidebar */}
+      {selectedUser && (
         <UserProfileSidebar
+          setData={setData}
           showSidebar={showUserSidebar}
           onClose={() => {
             setShowUserSidebar(false);
-            setSelectedUser(null);
+            setSelectedUser({} as User);
           }}
-          user={
-            selectedUser
-              ? {
-                  ...selectedUser,
-                  date: formatDate(selectedUser.date),
-                }
-              : null
-          }
-          setData={setData}
+          user={{
+            ...selectedUser,
+            date: formatDate(selectedUser.date),
+          }}
         />
-      </div>
+      )}
     </div>
   );
 };

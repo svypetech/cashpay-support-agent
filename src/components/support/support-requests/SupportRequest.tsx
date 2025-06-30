@@ -226,7 +226,6 @@ export default function MainSection() {
         onPageChange={handlePageChange}
       />
 
-      {/* Chat Sidebar with Infinite Scroll */}
       <ChatSidebar
         isOpen={chatSidebarOpen}
         onClose={handleChatClose}
