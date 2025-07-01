@@ -22,3 +22,14 @@ export interface ChatUser {
     email?:string
   };
 
+  export interface ChatPreview {
+  ticketId: string; 
+  date: string; 
+  message: string; 
+  image: string | null; 
+  userName: {
+    firstName: string;
+    lastName: string;
+  } | null; 
+  userImage: string | null; 
+}
