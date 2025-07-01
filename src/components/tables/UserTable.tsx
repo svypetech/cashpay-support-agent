@@ -3,8 +3,6 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import ColourfulBlock from "../ui/ColourfulBlock";
-import ConfirmModal from "../ui/ConfirmModal";
 import { User } from "@/lib/types/User";
 import ExpandableId from "../ui/ExpandableId";
 import UserProfileSidebar from "../users/UserInfoSidebar";
@@ -127,7 +125,6 @@ const UserTable: React.FC<Props> = ({ data, headings, setData }) => {
                   </td>
                   <td className="relative p-2 sm:p-5 font-satoshi min-w-[60px] text-center">
                     <div className="dropdown-container relative inline-block">
-                      {/* ✅ Centered options button with better styling */}
                       <button
                         className="relative cursor-pointer p-2 rounded-full transition-colors duration-200 flex items-center justify-center"
                         onClick={() => {

@@ -22,7 +22,7 @@ const headings = [
 const sortOptions = [
   { label: "None", value: "" },
   { label: "Date", value: "date" },
-  { label: "Status", value: "userStatus" },
+  { label: "Title", value: "title" },
 ];
 
 

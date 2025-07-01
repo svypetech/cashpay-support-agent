@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
-import VerificationAccordion from "./VerificationForm";
+import VerificationAccordion from "./VerificationAccordion";
 import axios from "axios";
 import { User } from "@/lib/types/User";
 import UserSidebarSkeleton from "../skeletons/SidebarSkeleton";
