@@ -11,11 +11,9 @@ interface ChatListProps {
 }
 
 export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
-  // ✅ Simple state management without URL dependency
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ✅ Convert tab to API parameters
   const getApiParams = () => {
     switch (activeTab) {
       case "Unread":
@@ -29,7 +27,6 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
 
   const { isRead, isReplied } = getApiParams();
 
-  // ✅ Use the custom hook - parameters will be sent to backend API
   const {
     chatPreviews,
     isLoading,
@@ -41,12 +38,11 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
     refreshChatPreviews
   } = useChatPreviews({
     limit: 20,
-    isRead,     // ✅ Will be added to backend URL as ?isRead=false
-    isReplied,  // ✅ Will be added to backend URL as ?isReplied=false
-    search: searchQuery, // ✅ Will be added to backend URL as ?search=searchterm
+    isRead,
+    isReplied,
+    search: searchQuery,
   });
 
-  // ✅ Helper function to format date
   const formatTimestamp = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -69,7 +65,6 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
     }
   };
 
-  // ✅ Helper function to convert ChatPreview to ChatUser
   const convertToChatUser = (chat: any): ChatUser => {
     return {
       userName: chat.userName || {
@@ -80,21 +75,16 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
     };
   };
 
-  // ✅ Handle tab change - triggers new API call with updated parameters
   const handleTabChange = (tab: string) => {
     console.log(`🏷️ Tab changed to: ${tab}`);
     setActiveTab(tab);
-    // The hook will automatically refetch with new isRead/isReplied parameters and show loading skeleton
   };
 
-  // ✅ Handle search - triggers new API call with search parameter
   const handleSearch = (query: string) => {
     console.log(`🔍 Search changed to: "${query}"`);
     setSearchQuery(query);
-    // The hook will automatically refetch with new search parameter and show loading skeleton
   };
 
-  // ✅ Get current filter description for display
   const getFilterDescription = () => {
     const filters = [];
     
@@ -110,38 +100,26 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
   };
   
   return (
-    <div className="flex flex-col min-h-[650px]">
-      {/* Header with bottom border */}
-      <div className="p-6 border-b border-primary7/30">
+    <div className="flex flex-col h-full w-full bg-white">
+      {/* ✅ Header - Fixed height */}
+      <div className="flex-shrink-0 p-4 md:p-6 border-b border-primary7/30">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Chats</h1>
-          <button
-            onClick={refreshChatPreviews}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            title="Refresh chats"
-            disabled={isLoading}
-          >
-            <span className={`text-lg ${isLoading ? 'animate-spin' : ''}`}>
-              🔄
-            </span>
-          </button>
+          <h1 className="text-xl md:text-2xl font-bold">Chats</h1>
         </div>
-        {/* Show total count with filter description */}
-        {totalCount > 0 && !isLoading && (
-          <p className="text-sm text-gray-500 mt-1">
-            {totalCount} chat{totalCount !== 1 ? 's' : ''}{getFilterDescription()}
-          </p>
-        )}
-        {/* Show loading indicator in header */}
-        {isLoading && (
+        {/* Show total count or loading */}
+        {isLoading ? (
           <p className="text-sm text-gray-500 mt-1">
             Loading chats{getFilterDescription()}...
           </p>
-        )}
+        ) : totalCount > 0 ? (
+          <p className="text-sm text-gray-500 mt-1">
+            {totalCount} chat{totalCount !== 1 ? 's' : ''}{getFilterDescription()}
+          </p>
+        ) : null}
       </div>
       
-      {/* Filter tabs with consistent border */}
-      <div className="flex border-b border-primary7/30">
+      {/* ✅ Filter tabs - Fixed height */}
+      <div className="flex-shrink-0 flex border-b border-primary7/30">
         {["All", "Unread", "Unreplied"].map((tab) => (
           <button
             key={tab}
@@ -158,8 +136,8 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
         ))}
       </div>
       
-      {/* Search with bottom border - ✅ Removed disabled prop */}
-      <div className="p-4 border-b border-primary7/30">
+      {/* ✅ Search - Fixed height */}
+      <div className="flex-shrink-0 p-4 border-b border-primary7/30">
         <Search 
           onSearch={handleSearch}
           className=""
@@ -168,8 +146,8 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
         />
       </div>
       
-      {/* Chat list with infinite scroll */}
-      <div className="flex-1 overflow-hidden">
+      {/* ✅ Chat list - Flexible height with proper mobile scrolling */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         {isError ? (
           <div className="p-4 text-center">
             <div className="text-red-500 mb-2">Error: {isError}</div>
@@ -184,21 +162,25 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
         ) : (
           <div
             id="chat-list-scrollable"
-            className="h-full overflow-y-auto"
-            style={{ height: '100%' }}
+            className="h-full overflow-y-auto overflow-x-hidden"
+            style={{ 
+              height: '100%',
+              WebkitOverflowScrolling: 'touch', // ✅ Smooth mobile scrolling
+              scrollbarWidth: 'thin' // ✅ Thin scrollbar on Firefox
+            }}
           >
-            {/* ✅ Show loading skeleton when isLoading is true (initial load OR filter change) */}
+            {/* ✅ Loading skeleton */}
             {isLoading ? (
-              <div className="space-y-1">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="p-4 border-b border-primary7/30">
+              <div className="space-y-0">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="p-4 border-b border-primary7/30 last:border-b-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                      <div className="flex-1">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
                         <div className="h-4 bg-gray-200 rounded animate-pulse mb-2 w-3/4"></div>
                         <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
                       </div>
-                      <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-12 flex-shrink-0"></div>
                     </div>
                   </div>
                 ))}
@@ -229,45 +211,35 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
                 {chatPreviews.map((chat, index) => (
                   <div 
                     key={chat.ticketId}
-                    className={`flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      activeChat === chat.ticketId ? "bg-gray-50" : ""
-                    } ${index !== 0 ? "border-t border-primary7/30" : ""}`}
+                    className={`
+                      flex items-center gap-3 p-4 
+                      hover:bg-gray-50 active:bg-gray-100 
+                      cursor-pointer transition-colors
+                      border-b border-primary7/30 last:border-b-0
+                      ${activeChat === chat.ticketId ? "bg-gray-50" : ""}
+                    `}
                     onClick={() => onChatSelect(convertToChatUser(chat), chat.ticketId)}
                   >
-                    <div className="relative">
+                    <div className="relative flex-shrink-0">
                       <div className="w-10 h-10 rounded-full bg-pink-200 flex items-center justify-center overflow-hidden">
-                        {chat.userImage ? (
-                          <Image
-                            src={chat.userImage}
-                            alt={chat.userName?.firstName || "User"}
-                            width={40}
-                            height={40}
-                            className="object-cover"
-                            onError={(e) => {
-                              // Fallback to initials if image fails
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              (target.nextElementSibling as HTMLElement)!.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        {/* Fallback initials */}
-                        <span 
-                          className={`text-sm font-medium text-gray-600 ${chat.userImage ? 'hidden' : 'flex'} items-center justify-center`}
-                        >
-                          {chat.userName ? chat.userName.firstName.charAt(0) : "?"}
-                        </span>
+                        <Image
+                          src={chat.userImage ? chat.userImage : "/images/blank-profile.webp"}
+                          alt={chat.userName?.firstName || "User"}
+                          width={40}
+                          height={40}
+                          className="object-cover"
+                        />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium text-sm text-gray-900 truncate">
+                      <div className="flex justify-between items-start gap-2">
+                        <h3 className="font-medium text-sm text-gray-900 truncate flex-1">
                           {chat.userName 
                             ? `${chat.userName.firstName} ${chat.userName.lastName}`
-                            : "Unknown User"
+                            : "N/A"
                           }
                         </h3>
-                        <span className="text-[10px] font-[200] text-secondary ml-2 flex-shrink-0">
+                        <span className="text-[10px] font-[200] text-secondary flex-shrink-0">
                           {formatTimestamp(chat.date)}
                         </span>
                       </div>

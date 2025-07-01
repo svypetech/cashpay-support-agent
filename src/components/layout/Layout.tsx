@@ -18,7 +18,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       className={`min-h-screen flex flex-col items-between  transition-all duration-500 ${"bg-white text-textLight"}`}
     >
       <Header />
-      <main className="flex-grow pb-[140px]">{children}</main>
+      <main className="flex-grow pb-[50px]">{children}</main>
       {/* <Footer /> */}
     </div>
   );

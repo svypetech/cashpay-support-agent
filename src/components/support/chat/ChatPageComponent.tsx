@@ -6,8 +6,8 @@ import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 import { Message, ChatUser } from "@/lib/types/chat";
 import MessageListSkeleton from "@/components/skeletons/MessageListSkeleton";
-import ChatHeaderSkeleton from "@/components/skeletons/ChatHeaderSkeleton";
 import { useSocket } from "@/hooks/useSocket";
+import HeaderSkeleton from "@/components/skeletons/HeaderSkeleton";
 
 interface ChatProps {
   chatId: string;
@@ -23,7 +23,7 @@ interface ChatProps {
   hasMore?: boolean;
 }
 
-export default function Chat({
+export default function ChatComponent({
   chatId,
   user,
   initialMessages = [],
@@ -244,7 +244,7 @@ export default function Chat({
   return (
     <div className={`flex flex-col bg-white h-full font-inter`}>
       {isLoading ? (
-        <ChatHeaderSkeleton />
+        <HeaderSkeleton />
       ) : isError ? (
         <div className="flex items-center justify-center h-full">
           <p>Error: {isError}</p>
