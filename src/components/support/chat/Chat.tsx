@@ -71,7 +71,6 @@ export default function Chat({
   // 📨 HANDLE NEW MESSAGES FROM SOCKET
   useEffect(() => {
     const cleanupListener = onNewMessage((newMessages, isRefetch) => {
-      console.log(`📨 Socket: ${isRefetch ? 'REFETCH' : 'NEW MESSAGE'} - ${newMessages.length} messages`);
       
       if (isRefetch) {
         // Full refetch - add to API messages
@@ -80,7 +79,6 @@ export default function Chat({
           const trulyNewMessages = newMessages.filter(msg => !existingIds.has(msg._id));
           
           if (trulyNewMessages.length > 0) {
-            console.log(`📚 Adding ${trulyNewMessages.length} messages to API array`);
             return [...prev, ...trulyNewMessages];
           }
           return prev;
@@ -90,20 +88,17 @@ export default function Chat({
         const newMessage = newMessages[0];
         
         if (newMessage && newMessage.ticketId === chatId) {
-          console.log(`🔌 Processing new message: ${newMessage._id} - "${newMessage.message}"`);
           
           // Simple matching: find temp message with same content
           let tempIdToReplace = '';
           tempMessages.forEach((tempMsg, tempId) => {
             if (tempMsg.message === newMessage.message) {
               tempIdToReplace = tempId;
-              console.log(`✅ Found matching temp message: ${tempId}`);
             }
           });
           
           if (tempIdToReplace) {
             // Replace temp message
-            console.log(`🔄 Replacing temp ${tempIdToReplace} with real ${newMessage._id}`);
             
             // Remove from temp messages
             setTempMessages(prev => {
@@ -121,7 +116,6 @@ export default function Chat({
             setSocketMessages(prev => {
               const exists = prev.some(msg => msg._id === newMessage._id);
               if (!exists) {
-                console.log(`➕ Adding new message: ${newMessage._id}`);
                 return [...prev, newMessage];
               }
               return prev;
@@ -159,24 +153,15 @@ export default function Chat({
           __v: 0,
         };
         
-        console.log(`📝 CREATING TEMP MESSAGE:`, {
-          tempId,
-          message: text,
-          ticketId: chatId,
-          timestamp: tempMessage.date
-        });
-        
         // Add to temp messages (for loading state)
         setTempMessages(prev => {
           const newMap = new Map(prev).set(tempId, tempMessage);
-          console.log(`📋 Temp messages after add:`, Array.from(newMap.entries()).map(([id, msg]) => ({ id, content: msg.message })));
           return newMap;
         });
         
         // Add to socket messages (for immediate display)
         setSocketMessages(prev => {
           const updated = [...prev, tempMessage];
-          console.log(`🔌 Socket messages after add:`, updated.map(msg => ({ id: msg._id, content: msg.message })));
           return updated;
         });
         

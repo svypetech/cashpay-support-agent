@@ -83,6 +83,7 @@ const SupportRequestTable = ({
         onConfirm={handleConfirmResolve}
         title="Resolve Request"
         message="Are you sure you want to mark this request as resolved?"
+        style="blue"
       />
 
       {/* Table */}
@@ -169,15 +170,15 @@ const SupportRequestTable = ({
                         }`}
                       >
                         <Image
-                          src="/icons/support_options.svg"
+                          src="/icons/options.svg"
                           alt="Resolve Request"
                           width={24}
                           height={24}
-                          className={
-                            supportRequest.status.toLowerCase() === "resolved"
+                          className={`h-5 w-5
+                            ${supportRequest.status.toLowerCase() === "resolved"
                               ? "opacity-50"
-                              : ""
-                          }
+                              : ""}
+                          `}
                         />
                       </button>
                     </div>

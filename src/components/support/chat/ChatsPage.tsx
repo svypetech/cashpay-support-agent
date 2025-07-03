@@ -48,7 +48,6 @@ export default function ChatsPage() {
   
   // Handle chat selection
   const handleChatSelect = (user: ChatUser, chatId: string) => {
-    console.log(`🏷️ Chat selected: ${chatId}`, user);
     setActiveChat(chatId);
     setCurrentChatUser(user);
     

@@ -18,7 +18,6 @@ export const formatDate = (dateString: string): string => {
 
     return `${year}-${month}-${day} ${hours}:${minutes}`;
   } catch (error) {
-    console.error("Error formatting date:", error);
     return "Error";
   }
 };

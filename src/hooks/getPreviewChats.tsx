@@ -15,7 +15,7 @@ interface UseChatPreviewsParams {
   limit?: number;
   page?: number;
   isRead?: boolean;
-  isReplied?: boolean;  
+  isReplied?: boolean;
   search?: string;
   autoFetch?: boolean;
 }
@@ -37,7 +37,7 @@ export default function useChatPreviews({
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  // ✅ Build query parameters for backend API
+  // Build query parameters for backend API
   const buildQueryParams = useCallback((pageNum: number) => {
     const params = new URLSearchParams();
     
@@ -49,46 +49,33 @@ export default function useChatPreviews({
       params.append('isRead', isRead.toString());
     }
     
-    // ✅ Add isReplied parameter to backend URL
     if (isReplied !== undefined) {
       params.append('isReplied', isReplied.toString());
     }
     
-    // ✅ Add search parameter to backend URL
     if (search && search.trim()) {
       params.append('search', search.trim());
     }
     
-    console.log(`🔗 Backend API URL params:`, params.toString());
     return params.toString();
   }, [limit, isRead, isReplied, search]);
 
-  // 📚 INITIAL FETCH - Load first page
+  // INITIAL FETCH - Load first page
   const fetchChatPreviews = useCallback(async (resetData = true, showLoadingSkeleton = true) => {
-    // ✅ Show loading skeleton when filters change or initial load
     if (showLoadingSkeleton) {
       setIsLoading(true);
     }
     setIsError(null);
     
     try {
-      console.log(`📚 Fetching chat previews - page 1, limit: ${limit}`, {
-        isRead,
-        isReplied,
-        search: search || 'none'
-      });
       const queryParams = buildQueryParams(1);
       const backendUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}help/chat/yourChats?${queryParams}`;
-      
-      console.log(`📚 Backend API URL:`, backendUrl);
       
       const response = await axios.get<ChatPreviewsResponse>(backendUrl, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      
-      console.log(`📚 API: Fetched ${response.data.data.length} chat previews`);
       
       if (resetData) {
         setChatPreviews(response.data.data);
@@ -100,12 +87,10 @@ export default function useChatPreviews({
       setTotalCount(response.data.totalCount || response.data.data.length);
       setCurrentPage(1);
       
-      // ✅ Better hasMore logic
       const totalPagesCalculated = response.data.totalPages || Math.ceil((response.data.totalCount || response.data.data.length) / limit);
       setHasMore(totalPagesCalculated > 1);
       
     } catch (error: any) {
-      console.error("❌ Error fetching chat previews:", error);
       setIsError(error.response?.data?.message || "Failed to load chat previews");
       if (resetData) {
         setChatPreviews([]);
@@ -117,15 +102,9 @@ export default function useChatPreviews({
     }
   }, [buildQueryParams, limit, isRead, isReplied, search]);
 
-  // 📚 LOAD MORE - For infinite scroll
+  // LOAD MORE - For infinite scroll
   const loadMoreChatPreviews = useCallback(async () => {
     if (isLoadingMore || !hasMore || currentPage >= totalPages) {
-      console.log(`📚 Load more skipped:`, {
-        isLoadingMore,
-        hasMore,
-        currentPage,
-        totalPages
-      });
       return;
     }
     
@@ -133,11 +112,8 @@ export default function useChatPreviews({
     const nextPage = currentPage + 1;
     
     try {
-      console.log(`📚 Loading more chat previews - page ${nextPage}, limit: ${limit}`);
       const queryParams = buildQueryParams(nextPage);
       const backendUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}help/chat/yourChats?${queryParams}`;
-      
-      console.log(`📚 Backend API URL (page ${nextPage}):`, backendUrl);
       
       const response = await axios.get<ChatPreviewsResponse>(backendUrl, {
         headers: {
@@ -145,53 +121,40 @@ export default function useChatPreviews({
         },
       });
       
-      console.log(`📚 API: Fetched ${response.data.data.length} more chat previews`);
-      
       if (response.data.data.length > 0) {
         setChatPreviews(prev => {
           // Remove duplicates based on ticketId
           const existingIds = new Set(prev.map(chat => chat.ticketId));
           const newChats = response.data.data.filter(chat => !existingIds.has(chat.ticketId));
           
-          console.log(`📚 Adding ${newChats.length} new chats`);
           return [...prev, ...newChats];
         });
         
         setCurrentPage(nextPage);
         setHasMore(nextPage < totalPages);
       } else {
-        console.log(`📚 No more chats to load`);
         setHasMore(false);
       }
       
     } catch (error: any) {
-      console.error("❌ Error loading more chat previews:", error);
       setIsError(error.response?.data?.message || "Failed to load more chat previews");
     } finally {
       setIsLoadingMore(false);
     }
   }, [buildQueryParams, currentPage, totalPages, hasMore, isLoadingMore, limit]);
 
-  // 🔄 REFRESH - Reset and fetch from beginning
+  // REFRESH - Reset and fetch from beginning
   const refreshChatPreviews = useCallback(() => {
-    console.log(`🔄 Refreshing chat previews`);
     setCurrentPage(1);
     setHasMore(true);
-    fetchChatPreviews(true, true); // ✅ Show loading skeleton on refresh
+    fetchChatPreviews(true, true);
   }, [fetchChatPreviews]);
 
-  // ✅ Auto-fetch when filter parameters change - ALWAYS show loading skeleton
+  // Auto-fetch when filter parameters change
   useEffect(() => {
     if (autoFetch) {
-      console.log(`🔄 Auto-fetching due to parameter change:`, {
-        isRead,
-        isReplied,
-        search: search || 'none'
-      });
-      // ✅ Reset pagination state when filters change
       setCurrentPage(1);
       setHasMore(true);
-      // ✅ ALWAYS show loading skeleton when filters change
       fetchChatPreviews(true, true);
     }
   }, [isRead, isReplied, search, autoFetch, fetchChatPreviews]);

@@ -4,15 +4,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import ConfirmDialog from "@/components/ui/ConfirmModal";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 // Define the form schema with Zod
 const passwordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -26,6 +26,8 @@ export default function ChangePasswordPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const {
     register,
@@ -46,13 +48,10 @@ export default function ChangePasswordPage() {
   };
 
   const handleConfirmChange = async () => {
+    setErrorMessage("") 
     setIsSubmitting(true);
     try {
-      // Get the form values
       const formData = getValues();
-
-      // Simulate API call to change password
-      console.log("Changing password with:", formData);
 
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}admin/changePassword`,
@@ -68,15 +67,15 @@ export default function ChangePasswordPage() {
       );
 
       if (response.data.success) {
-        alert("Password changed successfully!");
+        setSuccessMessage("Password changed successfully")
         router.push("/settings");
       } else {
-        alert("Failed to change password. Please try again.");
+        setErrorMessage("Failed to change password, please try again later")
+        router.push("/settings");
       }
-
-      // window.location.href = "/settings"
     } catch (error) {
-      alert("Failed to change password. Please try again.");
+      console.error("Error changing password:", error);
+      setErrorMessage("Failed to change password, please try again later")
     } finally {
       setIsSubmitting(false);
       setShowConfirmation(false);
@@ -92,6 +91,18 @@ export default function ChangePasswordPage() {
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {errorMessage}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm">
+              {successMessage}
+            </div>
+          )}
+
           <div>
             <label
               htmlFor="currentPassword"
@@ -168,15 +179,14 @@ export default function ChangePasswordPage() {
       </div>
 
       {/* Confirmation Dialog */}
-      <ConfirmDialog
+      <ConfirmModal
         isOpen={showConfirmation}
         title="Confirm Password Change"
         message="Are you sure you want to change your password?"
         onClose={() => setShowConfirmation(false)}
         onConfirm={handleConfirmChange}
         isLoading={isSubmitting}
-        confirmButtonClass="flex-1 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-blue-900 flex items-center justify-center cursor-pointer"
-        cancelButtonClass="flex-1 py-2 rounded-lg border-[1px] border-primary text-primary font-semibold cursor-pointer flex items-center justify-center"
+        style="blue"
       />
     </div>
   );

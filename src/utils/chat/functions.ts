@@ -24,7 +24,7 @@ export function groupMessagesByDate(messages: Message[]): MessageGroup[] {
       const existingMessages = groups.get(dateKey) || [];
       groups.set(dateKey, [...existingMessages, message]);
     } catch (error) {
-      console.error('Error parsing message date:', error, message);
+      // Skip invalid dates
     }
   });
 
@@ -60,7 +60,6 @@ export  const formatMessageTime = (dateString: string): string => {
       // Format as 12-hour time with AM/PM
       return format(date, 'h:mm a'); // Example: "2:45 PM"
     } catch (error) {
-      console.error("Time formatting error:", error);
       return '';
     }
   };

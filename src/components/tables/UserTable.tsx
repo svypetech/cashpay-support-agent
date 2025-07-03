@@ -42,8 +42,6 @@ const UserTable: React.FC<Props> = ({ data, headings, setData }) => {
 
   // Simple dropdown logic: close on outside click
   useEffect(() => {
-    console.log("length: ", data.length);
-    console.log("index:", selectedIndex);
     const handleClickOutside = (event: MouseEvent) => {
       if (activeDropdown !== null) {
         const target = event.target as HTMLElement;

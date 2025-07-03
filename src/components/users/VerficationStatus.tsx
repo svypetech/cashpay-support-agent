@@ -15,7 +15,7 @@ interface VerificationStepsProps {
 
 export default function VerificationSteps({
   steps,
-  onStartVerification = () => console.log("Start verification"),
+  onStartVerification = () => {},
 }: VerificationStepsProps) {
   let user = localStorage.getItem("user");
   let canApproveKyc = user ? JSON.parse(user).canApproveKyc : false;

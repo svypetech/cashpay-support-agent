@@ -43,7 +43,7 @@ export default function Search({
         placeholder={placeholder}
         value={searchValue}
         onChange={handleInputChange}
-        className="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 hover:border-gray-400"
+        className={`w-full pl-4 pr-10 py-2 rounded-lg focus:outline-none focus:ring focus:ring-primary shadow-[0px_0px_4px_0px_rgba(0,0,0,0.2)] bg-white`}
       />
       
       {/* Right side icons */}

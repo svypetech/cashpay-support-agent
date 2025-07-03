@@ -76,12 +76,10 @@ export default function ChatList({ onChatSelect, activeChat }: ChatListProps) {
   };
 
   const handleTabChange = (tab: string) => {
-    console.log(`🏷️ Tab changed to: ${tab}`);
     setActiveTab(tab);
   };
 
   const handleSearch = (query: string) => {
-    console.log(`🔍 Search changed to: "${query}"`);
     setSearchQuery(query);
   };
 

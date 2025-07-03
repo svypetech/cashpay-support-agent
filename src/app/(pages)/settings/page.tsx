@@ -9,6 +9,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { useToast } from "@/components/Providers/ToastProvider";
 
 export default function SettingsPage() {
   // Form schema with Zod validation
@@ -26,6 +27,7 @@ export default function SettingsPage() {
   const [image, setImage] = useState<string>("/images/user-avatar.png");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showSuccess, showError } = useToast();
 
   // Initialize form with react-hook-form and zod resolver
   const {
@@ -56,9 +58,9 @@ export default function SettingsPage() {
         }
       }
     } catch (error) {
-      alert("Error loading user data");
+      showError("Error", "Failed to load user data");
     }
-  }, [setValue]);
+  }, [setValue, showError]);
 
   // Function to handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,15 +115,14 @@ export default function SettingsPage() {
             }
           }
         } catch (error: any) {
-          alert(
-            "Failed to upload image: " + JSON.stringify(error.response.data)
-          );
+          showError("Upload Failed", "Failed to upload profile image");
           return;
         }
 
-
         if (data.email == user?.email && data.name == user?.name) {
-          
+          showSuccess("Success", "Profile image updated successfully");
+          setIsEditing(false);
+          setImageFile(null);
           return;
         }
       }
@@ -141,11 +142,12 @@ export default function SettingsPage() {
         setUser({ ...user, ...data });
         setIsEditing(false);
         setImageFile(null);
-        alert("Profile updated successfully");
+        showSuccess("Success", "Profile updated successfully");
       } else {
-        alert("Failed to update profile");
+        showError("Update Failed", "Failed to update profile");
       }
     } catch (error) {
+      showError("Error", "An error occurred while updating profile");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,7 +163,7 @@ export default function SettingsPage() {
           setImage(user.image || "/images/user-avatar.png");
         }
       } catch (error) {
-        alert("Error discarding changes");
+        showError("Error", "Failed to discard changes");
       }
     }
     setIsEditing(!isEditing);
@@ -184,16 +186,17 @@ export default function SettingsPage() {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       setShowDeleteDialog(false);
+      showSuccess("Success", "Account deleted successfully");
       window.location.href = "/signin";
     } catch (error) {
-      alert("Failed to delete account");
+      showError("Delete Failed", "Failed to delete account");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-10 py-8 font-[satoshi]">
+    <div className="px-6 sm:px-10 py-8 font-[satoshi]">
       <div
         className={`flex ${
           isEditing ? "flex-col" : ""
@@ -202,7 +205,7 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold mb-2 sm:mb-0">Settings</h1>
 
         {isEditing ? (
-          <div className="flex flex-row items-center gap-2">
+          <div className="flex flex-row items-center gap-2 mt-5 sm:mt-0">
             <button
               type="button"
               onClick={handleDiscard}
@@ -223,7 +226,7 @@ export default function SettingsPage() {
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="cursor-pointer px-4 py-1.5 border font-semibold border-primary rounded-md text-primary hover:bg-blue-50 text-sm sm:text-base"
+            className="cursor-pointer px-6 py-1.5 border font-semibold border-primary rounded-md text-primary hover:bg-blue-50 text-sm sm:text-base"
           >
             Edit
           </button>
@@ -243,7 +246,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Profile Photo and Input Fields - 3 columns */}
-          <div className="md:col-span-3 mx-10">
+          <div className="md:col-span-3 mx-0 md:mx-10">
             <div className="flex flex-col gap-6">
               {/* Profile Photo - 1 column within the 3 columns */}
               <div className="md:col-span-1">
@@ -346,10 +349,10 @@ export default function SettingsPage() {
         </div>
 
         {/* Action Items */}
-        <div className="mt-8 space-y-4 border-t border-gray-200 pt-6">
+        <div className="mt-8 space-y-4 pt-6">
           <Link
             href={"/change-password"}
-            className="w-full cursor-pointer border-b border-gray-300 flex items-center justify-between py-3 px-1 text-left group"
+            className="w-full cursor-pointer border-b border-gray-300 flex items-center justify-between py-3 px-1 text-left group hover:bg-gray-50"
           >
             <div className="flex items-center">
               <div className="mr-3 text-gray-400">
@@ -365,9 +368,6 @@ export default function SettingsPage() {
             </div>
             <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
           </Link>
-
-          <div className="border-t border-gray-100"></div>
-          <div className="border-t border-gray-100"></div>
 
           {/* Delete Account button */}
           <button
@@ -401,9 +401,7 @@ export default function SettingsPage() {
         warningText="*This operation cannot be undone"
         confirmText="Delete Account"
         cancelText="Cancel"
-        cancelButtonClass="bg-white border-[#DF1D1D] border-[1px] text-[#DF1D1D] hover:bg-[#DF1D1D] hover:text-white"
-        confirmButtonClass="bg-[#DF1D1D] text-white"
-        
+        style="red"
       />
     </div>
   );

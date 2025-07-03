@@ -44,18 +44,14 @@ export default function UserProfileSidebar({
   // ✅ Fixed animation logic
   useEffect(() => {
     if (showSidebar) {
-      console.log('🔍 Opening sidebar');
       setIsVisible(true); // Show the component
       setTimeout(() => {
         setShouldSlideIn(true); // Trigger slide-in animation
-        console.log('🔍 Slide-in triggered');
       }, 50); // Small delay to ensure DOM is ready
     } else {
-      console.log('🔍 Closing sidebar');
       setShouldSlideIn(false); // Start slide-out animation
       const timer = setTimeout(() => {
         setIsVisible(false); // Hide the component after animation
-        console.log('🔍 Sidebar hidden');
       }, 300); // Match the transition duration
       return () => clearTimeout(timer);
     }
@@ -63,13 +59,11 @@ export default function UserProfileSidebar({
 
   // ✅ Don't render if not visible
   if (!isVisible) {
-    console.log('🔍 Sidebar not visible, not rendering');
     return null;
   }
 
   // ✅ Show skeleton while KYC data is loading
   if (isKycLoading) {
-    console.log('🔍 Showing skeleton while loading KYC');
     return (
       <div className="fixed inset-0 z-50 overflow-hidden">
         <div
@@ -93,8 +87,6 @@ export default function UserProfileSidebar({
       </div>
     );
   }
-
-  console.log('🔍 Rendering sidebar with shouldSlideIn:', shouldSlideIn);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
