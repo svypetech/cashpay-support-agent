@@ -8,6 +8,7 @@ import { Message, ChatUser } from "@/lib/types/chat";
 import MessageListSkeleton from "@/components/skeletons/MessageListSkeleton";
 import ChatHeaderSkeleton from "@/components/skeletons/ChatHeaderSkeleton";
 import { useSocket } from "@/hooks/useSocket";
+import { useToast } from "@/components/Providers/ToastProvider";
 
 interface ChatProps {
   chatId: string;
@@ -36,44 +37,40 @@ export default function Chat({
   isLoadingMore = false,
   hasMore = false,
 }: ChatProps) {
-  const { sendMessage, onNewMessage, isConnected } = useSocket();
+  const { sendMessage, sendFile, onNewMessage, isConnected } = useSocket();
+  const { showError, showSuccess } = useToast();
   
   // ✨ DUAL ARRAY SYSTEM
-  const [apiMessages, setApiMessages] = useState<Message[]>(initialMessages); // From API/infinite scroll
-  const [socketMessages, setSocketMessages] = useState<Message[]>([]); // From real-time socket
-  const [tempMessages, setTempMessages] = useState<Map<string, Message>>(new Map()); // Temporary loading states
+  const [apiMessages, setApiMessages] = useState<Message[]>(initialMessages);
+  const [socketMessages, setSocketMessages] = useState<Message[]>([]);
+  const [tempMessages, setTempMessages] = useState<Map<string, Message>>(new Map());
   
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const socketConnectionTime = useRef<number>(Date.now());
 
   // 🔄 COMBINED MESSAGES FOR DISPLAY
   const allMessages = useCallback(() => {
-    // Combine API messages + socket messages, remove duplicates, sort by date
     const combined = [...apiMessages, ...socketMessages];
     
-    // Remove duplicates by ID (socket messages take precedence over API messages)
     const uniqueMessages = combined.reduce((acc, current) => {
       const existing = acc.find(msg => msg._id === current._id);
       if (!existing) {
         acc.push(current);
       } else if (current._id.startsWith('temp-') && !existing._id.startsWith('temp-')) {
-        // Replace temp with real message
         const index = acc.findIndex(msg => msg._id === existing._id);
-        acc[index] = existing; // Keep the real message
+        acc[index] = existing;
       }
       return acc;
     }, [] as Message[]);
     
-    // Sort by date
     return uniqueMessages.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [apiMessages, socketMessages]);
 
   // 📨 HANDLE NEW MESSAGES FROM SOCKET
   useEffect(() => {
     const cleanupListener = onNewMessage((newMessages, isRefetch) => {
-      
       if (isRefetch) {
-        // Full refetch - add to API messages
         setApiMessages(prev => {
           const existingIds = new Set([...prev.map(m => m._id), ...socketMessages.map(m => m._id)]);
           const trulyNewMessages = newMessages.filter(msg => !existingIds.has(msg._id));
@@ -84,21 +81,48 @@ export default function Chat({
           return prev;
         });
       } else {
-        // Single new message
         const newMessage = newMessages[0];
         
         if (newMessage && newMessage.ticketId === chatId) {
-          
-          // Simple matching: find temp message with same content
+          // Better matching logic for temp message replacement
           let tempIdToReplace = '';
+          
           tempMessages.forEach((tempMsg, tempId) => {
-            if (tempMsg.message === newMessage.message) {
-              tempIdToReplace = tempId;
+            // For file uploads with temp file info
+            if ((tempMsg as any).tempFileInfo && newMessage.image) {
+              const tempFileInfo = (tempMsg as any).tempFileInfo;
+              const tempFileName = tempFileInfo.name;
+              
+              // Server message format: "filename\n[user_message]"
+              const serverMessage = newMessage.message || '';
+              const serverFileName = serverMessage.split('\n')[0]; // Get filename part
+              
+              console.log('Comparing files:', {
+                tempFileName,
+                serverFileName,
+                serverMessage,
+                tempMessage: tempMsg.message,
+                match: tempFileName === serverFileName
+              });
+              
+              // Match by exact filename
+              if (tempFileName === serverFileName) {
+                tempIdToReplace = tempId;
+                return;
+              }
+            }
+            // For text messages, match by content and timing (within 30 seconds)
+            else if (!newMessage.image && tempMsg.message === newMessage.message) {
+              const timeDiff = new Date(newMessage.date).getTime() - new Date(tempMsg.date).getTime();
+              if (Math.abs(timeDiff) < 30000) { // Within 30 seconds
+                tempIdToReplace = tempId;
+                return;
+              }
             }
           });
           
           if (tempIdToReplace) {
-            // Replace temp message
+            console.log('Replacing temp message:', tempIdToReplace, 'with confirmed message:', newMessage._id);
             
             // Remove from temp messages
             setTempMessages(prev => {
@@ -112,7 +136,9 @@ export default function Chat({
               prev.map(msg => msg._id === tempIdToReplace ? newMessage : msg)
             );
           } else {
-            // Add as new message
+            console.log('No temp message found to replace, adding as new message:', newMessage._id);
+            
+            // Add as new message if no temp message to replace
             setSocketMessages(prev => {
               const exists = prev.some(msg => msg._id === newMessage._id);
               if (!exists) {
@@ -128,66 +154,95 @@ export default function Chat({
     return cleanupListener;
   }, [chatId, onNewMessage, socketMessages, tempMessages]);
 
-  // 📤 HANDLE SENDING MESSAGES
+  // 📤 HANDLE SENDING MESSAGES (with optional file)
   const handleSendMessage = async (text: string, file?: File) => {
-    if (!text.trim()) return;
+    if (!text.trim() && !file) return;
     
-    setSendingMessage(true);
+    const userInfo = localStorage.getItem("user");
+    const currentUserId = userInfo ? JSON.parse(userInfo)._id : null;
     
-    try {
-      const userInfo = localStorage.getItem("user");
-      const currentUserId = userInfo ? JSON.parse(userInfo)._id : null;
-      
-      const { success, tempId } = await sendMessage(text, chatId);
-      
-      if (success && tempId) {
-        const tempMessage: Message = {
-          _id: tempId,
-          message: text,
-          isRead: false,
-          isReplied: false,
-          senderType: "support agent", 
-          ticketId: chatId,
-          date: new Date().toISOString(),
-          sender: currentUserId || "agent",
-          __v: 0,
-        };
+    if (file) {
+      // Handle file upload
+      setUploadingFile(true);
+      try {
+        const { success, tempId } = await sendFile(file, text, chatId);
         
-        // Add to temp messages (for loading state)
-        setTempMessages(prev => {
-          const newMap = new Map(prev).set(tempId, tempMessage);
-          return newMap;
-        });
-        
-        // Add to socket messages (for immediate display)
-        setSocketMessages(prev => {
-          const updated = [...prev, tempMessage];
-          return updated;
-        });
-        
-        if (file) {
-          console.log("📎 File attachment handling needed:", file);
+        if (success && tempId) {
+          // Create temp message that matches the final format
+          const isImage = file.type.startsWith('image/');
+          const tempImageUrl = isImage ? URL.createObjectURL(file) : undefined;
+          
+          const tempMessage: Message = {
+            _id: tempId,
+            message: text.trim() || `📎 ${file.name}`, // Match the file message format
+            isRead: false,
+            isReplied: false,
+            senderType: "support agent",
+            ticketId: chatId,
+            date: new Date().toISOString(),
+            sender: currentUserId || "agent",
+            __v: 0,
+            image: tempImageUrl,
+            // Add temp file info for consistent display
+            tempFileInfo: {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              isUploading: true
+            }
+          };
+          
+          setTempMessages(prev => new Map(prev).set(tempId, tempMessage));
+          setSocketMessages(prev => [...prev, tempMessage]);
+        } else {
+          showError("Upload Failed", "Failed to upload file");
         }
-      } else {
-        console.error("❌ Send message failed:", { success, tempId });
+      } catch (error) {
+        showError("Upload Error", "An error occurred while uploading the file");
+      } finally {
+        setUploadingFile(false);
       }
-    } catch (error) {
-      console.error("❌ Error sending message:", error);
-    } finally {
-      setSendingMessage(false);
+    } else {
+      // Handle text message
+      setSendingMessage(true);
+      try {
+        const { success, tempId } = await sendMessage(text, chatId);
+        
+        if (success && tempId) {
+          const tempMessage: Message = {
+            _id: tempId,
+            message: text,
+            isRead: false,
+            isReplied: false,
+            senderType: "support agent",
+            ticketId: chatId,
+            date: new Date().toISOString(),
+            sender: currentUserId || "agent",
+            __v: 0,
+          };
+          
+          setTempMessages(prev => new Map(prev).set(tempId, tempMessage));
+          setSocketMessages(prev => [...prev, tempMessage]);
+        } else {
+          showError("Send Failed", "Failed to send message");
+        }
+      } catch (error) {
+        showError("Send Error", "An error occurred while sending the message");
+      } finally {
+        setSendingMessage(false);
+      }
     }
   };
 
   // 🔄 RESET WHEN CHAT CHANGES
   useEffect(() => {
-    console.log("🔄 Chat changed, resetting arrays");
     setApiMessages(initialMessages);
     setSocketMessages([]);
     setTempMessages(new Map());
     socketConnectionTime.current = Date.now();
   }, [chatId]);
 
-  // 🔄 UPDATE API MESSAGES WHEN INITIAL MESSAGES CHANGE (from infinite scroll)
+  // 🔄 UPDATE API MESSAGES WHEN INITIAL MESSAGES CHANGE
   useEffect(() => {
     setApiMessages(initialMessages);
   }, [initialMessages]);
@@ -201,12 +256,10 @@ export default function Chat({
         
         for (const [tempId, tempMsg] of updated.entries()) {
           const age = Date.now() - new Date(tempMsg.date).getTime();
-          if (age > 30000) { // Remove temp messages older than 30 seconds
-            console.log(`🕒 Removing expired temp message: ${tempId}`);
+          if (age > 30000) {
             updated.delete(tempId);
             hasChanges = true;
             
-            // Also remove from socket messages
             setSocketMessages(prevSocket => 
               prevSocket.filter(msg => msg._id !== tempId)
             );
@@ -215,7 +268,7 @@ export default function Chat({
         
         return hasChanges ? updated : prev;
       });
-    }, 5000); // Check every 5 seconds
+    }, 5000);
     
     return () => clearInterval(interval);
   }, []);
@@ -223,8 +276,6 @@ export default function Chat({
   // 📊 PREPARE DATA FOR DISPLAY
   const displayMessages = allMessages();
   const tempMessageIds = Array.from(tempMessages.keys());
-
-  console.log(`📊 Display: ${displayMessages.length} total (${apiMessages.length} API + ${socketMessages.length} socket, ${tempMessageIds.length} temp)`);
 
   return (
     <div className={`flex flex-col bg-white h-full font-inter`}>
@@ -241,6 +292,13 @@ export default function Chat({
       {!isConnected && (
         <div className="bg-yellow-100 text-yellow-800 text-sm p-2 text-center">
           Connection issue. Messages may not send or receive properly.
+        </div>
+      )}
+      
+      {/* Show file upload status */}
+      {uploadingFile && (
+        <div className="bg-blue-100 text-blue-800 text-sm p-2 text-center">
+          Uploading file... Please wait.
         </div>
       )}
       
@@ -266,7 +324,7 @@ export default function Chat({
 
       <ChatInput 
         onSendMessage={handleSendMessage} 
-        disabled={sendingMessage || !isConnected}
+        disabled={sendingMessage || uploadingFile || !isConnected}
       />
     </div>
   );
@@ -279,7 +337,6 @@ function getUserIdFromLocalStorage(): string {
     const user = JSON.parse(userInfo);
     return user._id || "agent";
   } catch (error) {
-    console.error("Error parsing user from localStorage:", error);
     return "agent";
   }
 }

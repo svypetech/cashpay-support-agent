@@ -1,15 +1,21 @@
 export interface Message {
   _id: string;
+  message: string;
   isRead: boolean;
   isReplied: boolean;
-  sender: string;
   senderType: string;
   ticketId: string;
-  message: string;
   date: string;
-  __v?: number;
-  showStatus?: boolean; // New property to control status display
-  image?: string
+  sender: string;
+  __v: number;
+  image?: string;
+  showStatus?: boolean;
+  tempFileInfo?: {
+    name: string;
+    size: number;
+    type: string;
+    isUploading: boolean;
+  };
 }
 
 export interface ChatUser {
