@@ -1,6 +1,15 @@
 import { Message } from '@/lib/types/chat';
 import { format, startOfDay } from 'date-fns';
 
+export const handleTokenExpiration = () => {
+  // Clear user data from localStorage
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  // Redirect to sign-in page
+  window.location.href = "/signin"; // Adjust the path as needed
+};
+
 interface MessageGroup {
   date: string;
   messages: Message[];

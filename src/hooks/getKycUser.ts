@@ -7,6 +7,7 @@ import {
   isCompleteKycUser,
   isNewKycUser,
 } from "@/lib/types/KycUser";
+import { handleTokenExpiration } from "@/utils/chat/functions";
 
 export default function useFetchKycUser(id: string) {
   const [user, setUser] = useState<CompleteKycUser | NewKycUser | null>(null);
@@ -42,6 +43,10 @@ export default function useFetchKycUser(id: string) {
           setUser(response.data.kycUser);
         }
       } catch (error) {
+        if ((error as any).response?.status === 401) {
+          handleTokenExpiration();
+          return;
+        }
         console.error("Failed to fetch KYC user:", error);
         setIsError(true);
       } finally {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { handleTokenExpiration } from "@/utils/chat/functions";
 
 export default function useUser({
   currentPage,
@@ -40,7 +41,10 @@ export default function useUser({
         setUsers(response.data.data.users);
         setTotalPages(response.data.data.totalPages);
       } catch (error: any) {
-        
+        if (error.response?.status === 401) {
+          handleTokenExpiration();
+          return;
+        }
         setIsError(true);
         setUsers([]);
       } finally {

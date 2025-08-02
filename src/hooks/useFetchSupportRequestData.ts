@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { handleTokenExpiration } from "@/utils/chat/functions";
 
 export default function useSupportRequestData({
   currentPage,
@@ -46,7 +47,10 @@ export default function useSupportRequestData({
         setData(response.data.requests.requests);
         setTotalPages(response.data.requests.totalPages);
       } catch (error: any) {
-        
+        if (error.response?.status === 401) {
+          handleTokenExpiration();
+          return;
+        }
         setIsError(true);
         setData([]);
       } finally {

@@ -35,7 +35,7 @@ export const useSocket = () => {
         
         socket.on('connect_error', (error) => {
             setIsConnected(false);
-            showError("Connection Error", `Failed to connect to server: ${error.message}`);
+            // showError("Connection Error", `Failed to connect to server: ${error.message}`);
         });
 
         // Listen for general socket errors

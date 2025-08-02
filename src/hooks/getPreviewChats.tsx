@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { ChatPreview } from "@/lib/types/chat";
+import { handleTokenExpiration } from "@/utils/chat/functions";
 
 interface ChatPreviewsResponse {
   success: boolean;
@@ -91,6 +92,10 @@ export default function useChatPreviews({
       setHasMore(totalPagesCalculated > 1);
       
     } catch (error: any) {
+      if (error.response?.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
       setIsError(error.response?.data?.message || "Failed to load chat previews");
       if (resetData) {
         setChatPreviews([]);
@@ -137,6 +142,10 @@ export default function useChatPreviews({
       }
       
     } catch (error: any) {
+      if (error.response?.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
       setIsError(error.response?.data?.message || "Failed to load more chat previews");
     } finally {
       setIsLoadingMore(false);

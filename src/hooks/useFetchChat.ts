@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { ChatUser, Message } from "@/lib/types/chat";
+import { handleTokenExpiration } from "@/utils/chat/functions";
 
 export default function useFetchChat({
   chatId, 
@@ -46,6 +47,10 @@ export default function useFetchChat({
         setIsError(null);
         
       } catch (error: any) {
+        if (error.response?.status === 401) {
+          handleTokenExpiration();
+          return;
+        }
         console.error("❌ API: Error fetching messages:", error);
         setIsError(error.response?.data?.error || "Failed to load messages");
       } finally {
@@ -100,6 +105,10 @@ export default function useFetchChat({
         setCurrentPage(currentPage + 1);
       }
     } catch (error: any) {
+      if (error.response?.status === 401) {
+        handleTokenExpiration();
+        return;
+      }
       console.error("❌ API: Error loading more messages:", error);
       setIsError(error.response?.data?.error || "Failed to load more messages");
     } finally {
